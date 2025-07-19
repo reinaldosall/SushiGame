@@ -73,3 +73,5 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+.idea/.idea.SushiGame/.idea/encodings.xml
+.idea/.idea.SushiGame/.idea/indexLayout.xml
