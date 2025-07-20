@@ -1,27 +1,76 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CookwareActor.h"
+#include "IngredientActor.h"
+#include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
-// Sets default values
 ACookwareActor::ACookwareActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	bReplicates = true;
 }
 
-// Called when the game starts or when spawned
 void ACookwareActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
-// Called every frame
 void ACookwareActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+/*
+void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
+{
+	/*if (!HasAuthority() || bIsProcessing || !Ingredient) return;
 
+	StartProcessing(Ingredient);
+*/
+void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
+{
+	if (!Ingredient) return;
+
+	EIngredientState CurrentState = Ingredient->GetIngredientState();
+
+	UE_LOG(LogTemp, Warning, TEXT("Cookware interacted! Ingredient state: %d"), (int32)CurrentState);
+	 
+	switch (CurrentState)
+	{
+	case EIngredientState::Raw:
+		Ingredient->SetIngredientState(EIngredientState::Sliced);
+		break;
+	case EIngredientState::Sliced:
+		Ingredient->SetIngredientState(EIngredientState::Rolled);
+		break;
+	default:
+		break;
+	}
 }
 
+
+void ACookwareActor::StartProcessing(AIngredientActor* Ingredient)
+{
+	bIsProcessing = true;
+	CurrentIngredient = Ingredient;
+
+	GetWorldTimerManager().SetTimer(ProcessingTimerHandle, this, &ACookwareActor::OnProcessingComplete, ProcessingTime, false);
+}
+
+void ACookwareActor::OnProcessingComplete()
+{
+	if (CurrentIngredient)
+	{
+		// Jumps to next state
+		CurrentIngredient->OnInteract(); // Reuse ingredient logic
+	}
+
+	bIsProcessing = false;
+	CurrentIngredient = nullptr;
+}
+
+void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACookwareActor, CurrentIngredient);
+	DOREPLIFETIME(ACookwareActor, bIsProcessing);
+}
