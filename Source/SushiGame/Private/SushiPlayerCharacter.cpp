@@ -34,6 +34,8 @@ ASushiPlayerCharacter::ASushiPlayerCharacter()
 	// Allow character rotation with input
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	
+	UE_LOG(LogTemp, Warning, TEXT("Pawn possessed at BeginPlay: %s"), *GetName());
 
 }
 
@@ -41,7 +43,15 @@ ASushiPlayerCharacter::ASushiPlayerCharacter()
 void ASushiPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (AController* MyController = GetController())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SushiPlayerCharacter possessed by: %s"), *MyController->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("SushiPlayerCharacter was not possessed at BeginPlay"));
+	}
 }
 
 // Called every frame
@@ -56,6 +66,8 @@ void ASushiPlayerCharacter::Tick(float DeltaTime)
 void ASushiPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	
+	UE_LOG(LogTemp, Warning, TEXT("SetupPlayerInputComponent called"));
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASushiPlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASushiPlayerCharacter::MoveRight);

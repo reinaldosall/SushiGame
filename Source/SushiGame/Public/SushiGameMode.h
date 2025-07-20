@@ -11,4 +11,8 @@ class SUSHIGAME_API ASushiGameMode : public AGameModeBase
 
 public:
 	ASushiGameMode();
+
+protected:
+	
+	virtual void BeginPlay() override;
 };
