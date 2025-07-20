@@ -24,4 +24,3 @@ void AOrderManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-

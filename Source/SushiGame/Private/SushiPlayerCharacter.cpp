@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "SushiPlayerCharacter.h"
 #include "CookwareActor.h"
 #include "IngredientActor.h"
@@ -134,6 +131,3 @@ void ASushiPlayerCharacter::LookUp(float Rate)
 {
 	AddControllerPitchInput(Rate);
 }
-
-
-

@@ -10,8 +10,6 @@ ASushiGameMode::ASushiGameMode()
 	// 	DefaultPawnClass = PlayerPawnBPClass.Class;
 	// }
 }
-#include "Kismet/GameplayStatics.h"
-#include "UObject/ConstructorHelpers.h"
 
 void ASushiGameMode::BeginPlay()
 {
