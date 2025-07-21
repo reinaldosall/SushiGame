@@ -4,8 +4,8 @@
 #include "GameFramework/Character.h"
 #include "SushiPlayerCharacter.generated.h"
 
-class UCameraComponent;
-class USpringArmComponent;
+class ACookwareActor;
+class AIngredientActor;
 class ATableActor;
 
 UCLASS()
@@ -18,44 +18,37 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	// Variáveis de gameplay
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* CameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* FollowCamera;
-
-public:	
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Input handlers
+	// Movement
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Rate);
 	void LookUp(float Rate);
 
+	// Interaction
 	void Interact();
-	void DeliverDish();	
+	void DeliverDish();
 
-	// Estado da receita atual
-	UPROPERTY(BlueprintReadWrite, Replicated)
-	FName HeldRecipe;
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerInteractWith(ACookwareActor* Cookware, AIngredientActor* Ingredient);
 
-	UPROPERTY(BlueprintReadWrite, Replicated)
-	int32 RecipeProgress;
-	
-	// Chamado no servidor para entregar o prato
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerDeliverDish(FName RecipeName, ATableActor* Table);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerInteract();
-	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerInteractWith(ACookwareActor* Cookware, AIngredientActor* Ingredient);
-	
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	class USpringArmComponent* CameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	class UCameraComponent* FollowCamera;
+
+public:
+	UPROPERTY(Replicated)
+	FName HeldRecipe;
+
+	UPROPERTY(Replicated)
+	int32 RecipeProgress;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
