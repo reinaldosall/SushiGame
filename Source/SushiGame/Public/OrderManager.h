@@ -5,24 +5,32 @@
 #include "OrderManager.generated.h"
 
 class ATableActor;
-class UUserWidget;
+class UOrderHUDWidget;
+
+UENUM(BlueprintType)
+enum class EDeliveryResult : uint8
+{
+	Success,
+	WrongRecipe,
+	WrongTable
+};
 
 USTRUCT(BlueprintType)
 struct FOrder
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY()
 	FName RecipeName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY()
 	float TimeRemaining;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY()
 	ATableActor* TargetTable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bCompleted = false;
+	UPROPERTY()
+	bool bCompleted;
 };
 
 UCLASS()
@@ -30,39 +38,45 @@ class SUSHIGAME_API AOrderManager : public AActor
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	AOrderManager();
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
 	virtual void Tick(float DeltaTime) override;
 
-	// Spawns a new random order
-	void GenerateOrder();
-
-	// Called when player delivers a dish
-	bool TryCompleteOrder(FName RecipeName, ATableActor* Table);
-
-	UPROPERTY(EditAnywhere, Category = "Orders")
+	UPROPERTY(EditDefaultsOnly)
 	TArray<FName> AvailableRecipes;
 
-	UPROPERTY(EditAnywhere, Category = "Orders")
-	float OrderInterval = 10.0f;
+	UPROPERTY(EditDefaultsOnly)
+	float MaxOrderTime = 20.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Orders")
-	float MaxOrderTime = 30.0f;
+	UPROPERTY(EditDefaultsOnly)
+	float OrderInterval = 5.0f;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY()
+	float TimeSinceLastOrder = 0.0f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ActiveOrders)
 	TArray<FOrder> ActiveOrders;
 
-	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class UOrderHUDWidget> HUDWidgetClass;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UOrderHUDWidget> HUDWidgetClass;
 
 	UPROPERTY()
 	UOrderHUDWidget* HUDWidgetInstance;
 
-private:
-	float TimeSinceLastOrder = 0.0f;
+	UFUNCTION()
+	void OnRep_ActiveOrders();
+
+	void UpdateHUD();
+
+public:
+	UFUNCTION()
+	void GenerateOrder();
+
+	UFUNCTION()
+	EDeliveryResult TryCompleteOrder(FName RecipeName, ATableActor* Table);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

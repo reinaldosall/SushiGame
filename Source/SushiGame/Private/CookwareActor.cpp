@@ -1,7 +1,8 @@
 #include "CookwareActor.h"
 #include "IngredientActor.h"
+#include "SushiPlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "TimerManager.h"
 
 ACookwareActor::ACookwareActor()
 {
@@ -18,13 +19,12 @@ void ACookwareActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-/*
-void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
-{
-	/*if (!HasAuthority() || bIsProcessing || !Ingredient) return;
 
-	StartProcessing(Ingredient);
-*/
+void ACookwareActor::OnProcessingComplete()
+{ 
+	UE_LOG(LogTemp, Log, TEXT("Processing completed in Cookware."));
+}
+
 void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 {
 	if (!Ingredient) return;
@@ -32,7 +32,7 @@ void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 	EIngredientState CurrentState = Ingredient->GetIngredientState();
 
 	UE_LOG(LogTemp, Warning, TEXT("Cookware interacted! Ingredient state: %d"), (int32)CurrentState);
-	 
+
 	switch (CurrentState)
 	{
 	case EIngredientState::Raw:
@@ -44,27 +44,25 @@ void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 	default:
 		break;
 	}
-}
 
-
-void ACookwareActor::StartProcessing(AIngredientActor* Ingredient)
-{
-	bIsProcessing = true;
-	CurrentIngredient = Ingredient;
-
-	GetWorldTimerManager().SetTimer(ProcessingTimerHandle, this, &ACookwareActor::OnProcessingComplete, ProcessingTime, false);
-}
-
-void ACookwareActor::OnProcessingComplete()
-{
-	if (CurrentIngredient)
+	ASushiPlayerCharacter* Player = Cast<ASushiPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (Player)
 	{
-		// Jumps to next state
-		CurrentIngredient->OnInteract(); // Reuse ingredient logic
+		if (Player->HeldRecipe.IsNone())
+		{
+			Player->HeldRecipe = Ingredient->IngredientType;
+			Player->RecipeProgress = 1;
+			UE_LOG(LogTemp, Warning, TEXT("Player started new recipe: %s"), *Player->HeldRecipe.ToString());
+		}
+		else if (Player->HeldRecipe == Ingredient->IngredientType)
+		{
+			if (Player->RecipeProgress < 3)
+			{
+				Player->RecipeProgress++;
+				UE_LOG(LogTemp, Warning, TEXT("Progressed recipe to step %d"), Player->RecipeProgress);
+			}
+		}
 	}
-
-	bIsProcessing = false;
-	CurrentIngredient = nullptr;
 }
 
 void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

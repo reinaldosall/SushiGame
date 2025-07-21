@@ -2,22 +2,26 @@
 #include "OrderHUDWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
+#include "Net/UnrealNetwork.h"
 
 AOrderManager::AOrderManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+	bAlwaysRelevant = true;
 }
 
 void AOrderManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HUDWidgetClass)
+	if (!IsNetMode(NM_DedicatedServer) && HUDWidgetClass)
 	{
 		HUDWidgetInstance = CreateWidget<UOrderHUDWidget>(GetWorld(), HUDWidgetClass);
 		if (HUDWidgetInstance)
 		{
 			HUDWidgetInstance->AddToViewport();
+			UpdateHUD();
 		}
 	}
 }
@@ -26,36 +30,40 @@ void AOrderManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	TimeSinceLastOrder += DeltaTime;
-
-	// Spawn new order periodically
-	if (TimeSinceLastOrder >= OrderInterval)
+	if (HasAuthority())
 	{
-		GenerateOrder();
-		TimeSinceLastOrder = 0.0f;
-	}
+		TimeSinceLastOrder += DeltaTime;
 
-	// Update timers
-	for (FOrder& Order : ActiveOrders)
-	{
-		if (!Order.bCompleted)
+		if (TimeSinceLastOrder >= OrderInterval)
 		{
-			Order.TimeRemaining -= DeltaTime;
+			GenerateOrder();
+			TimeSinceLastOrder = 0.0f;
+		}
 
-			if (Order.TimeRemaining <= 0.0f)
+		for (FOrder& Order : ActiveOrders)
+		{
+			if (!Order.bCompleted)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Order expired: %s"), *Order.RecipeName.ToString());
-				Order.bCompleted = true;
+				Order.TimeRemaining -= DeltaTime;
 
-				if (Order.TargetTable)
+				if (Order.TimeRemaining <= 0.0f)
 				{
-					Order.TargetTable->ClearFloatingOrderText();
+					Order.bCompleted = true;
+					if (Order.TargetTable)
+					{
+						Order.TargetTable->ClearFloatingOrderText();
+					}
+					UE_LOG(LogTemp, Warning, TEXT("Order expired: %s"), *Order.RecipeName.ToString());
 				}
 			}
 		}
 	}
 
-	// Update HUD
+	UpdateHUD();
+}
+
+void AOrderManager::UpdateHUD()
+{
 	if (HUDWidgetInstance)
 	{
 		TArray<FOrderDisplayData> DisplayList;
@@ -76,21 +84,12 @@ void AOrderManager::Tick(float DeltaTime)
 
 void AOrderManager::GenerateOrder()
 {
-	if (AvailableRecipes.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No recipes available to generate order."));
-		return;
-	}
+	if (AvailableRecipes.Num() == 0) return;
 
-	// Find a random table in the world
 	TArray<AActor*> FoundTables;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATableActor::StaticClass(), FoundTables);
 
-	if (FoundTables.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No tables found for order assignment."));
-		return;
-	}
+	if (FoundTables.Num() == 0) return;
 
 	ATableActor* TargetTable = Cast<ATableActor>(FoundTables[FMath::RandRange(0, FoundTables.Num() - 1)]);
 	FName ChosenRecipe = AvailableRecipes[FMath::RandRange(0, AvailableRecipes.Num() - 1)];
@@ -99,35 +98,47 @@ void AOrderManager::GenerateOrder()
 	NewOrder.RecipeName = ChosenRecipe;
 	NewOrder.TimeRemaining = MaxOrderTime;
 	NewOrder.TargetTable = TargetTable;
-
-	ActiveOrders.Add(NewOrder);
+	NewOrder.bCompleted = false;
 
 	if (TargetTable)
 	{
 		TargetTable->UpdateFloatingOrderText(ChosenRecipe);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("New Order: %s for table %s"), *ChosenRecipe.ToString(), *TargetTable->GetName());
+	ActiveOrders.Add(NewOrder);
+	OnRep_ActiveOrders();
 }
 
-bool AOrderManager::TryCompleteOrder(FName RecipeName, ATableActor* Table)
+void AOrderManager::OnRep_ActiveOrders()
+{
+	UpdateHUD();
+}
+
+EDeliveryResult AOrderManager::TryCompleteOrder(FName RecipeName, ATableActor* Table)
 {
 	for (FOrder& Order : ActiveOrders)
 	{
-		if (!Order.bCompleted && Order.RecipeName == RecipeName && Order.TargetTable == Table)
-		{
-			Order.bCompleted = true;
+		if (Order.bCompleted)
+			continue;
 
-			if (Order.TargetTable)
-			{
-				Order.TargetTable->ClearFloatingOrderText();
-			}
+		if (Order.TargetTable != Table)
+			continue;
 
-			UE_LOG(LogTemp, Log, TEXT("Order completed: %s"), *RecipeName.ToString());
-			return true;
-		}
+		if (Order.RecipeName != RecipeName)
+			return EDeliveryResult::WrongRecipe;
+
+		Order.bCompleted = true;
+		Order.TargetTable->ClearFloatingOrderText();
+
+		OnRep_ActiveOrders();
+		return EDeliveryResult::Success;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Invalid order delivery: %s"), *RecipeName.ToString());
-	return false;
+	return EDeliveryResult::WrongTable;
+}
+
+void AOrderManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AOrderManager, ActiveOrders);
 }

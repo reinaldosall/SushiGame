@@ -1,9 +1,11 @@
 #include "SushiGameMode.h"
+#include "SushiPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 ASushiGameMode::ASushiGameMode()
 {
+	PlayerStateClass = ASushiPlayerState::StaticClass();
 	// ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
 	// if (PlayerPawnBPClass.Class != nullptr)
 	// {

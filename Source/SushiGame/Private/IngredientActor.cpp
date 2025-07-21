@@ -9,12 +9,8 @@ AIngredientActor::AIngredientActor()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;
 
-	// Trace hit check
-	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	Mesh->SetCollisionResponseToChannel(ECC_Visibility, ECollisionResponse::ECR_Block);
-
 	IngredientState = EIngredientState::Raw;
+	IngredientType = FName("Default"); // Pode configurar no editor para tipos reais
 }
 
 void AIngredientActor::BeginPlay()
@@ -23,14 +19,8 @@ void AIngredientActor::BeginPlay()
 	UpdateVisualForState();
 }
 
-void AIngredientActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 void AIngredientActor::OnInteract()
 {
-	// For testing: advance state manually
 	switch (IngredientState)
 	{
 	case EIngredientState::Raw:
@@ -65,8 +55,8 @@ void AIngredientActor::OnRep_IngredientState()
 
 void AIngredientActor::UpdateVisualForState()
 {
-	// Placeholder: for change meshes based on actor state
-	UE_LOG(LogTemp, Log, TEXT("Ingredient changed to state: %d"), static_cast<int32>(IngredientState));
+	// change mesh comes here
+	UE_LOG(LogTemp, Log, TEXT("Visual update for state: %d"), static_cast<int32>(IngredientState));
 }
 
 void AIngredientActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

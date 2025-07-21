@@ -23,12 +23,11 @@ public:
 	// Called when the player interacts with this actor
 	void OnInteract(AIngredientActor* Ingredient);
 
-protected:
-
 	// Simulates time needed to process an ingredient
 	UPROPERTY(EditDefaultsOnly, Category = "Cooking")
-	float ProcessingTime = 2.5f;
+	float ProcessingTime = 2.5f;	
 
+protected:
 	// Current ingredient being processed
 	UPROPERTY(Replicated)
 	AIngredientActor* CurrentIngredient;

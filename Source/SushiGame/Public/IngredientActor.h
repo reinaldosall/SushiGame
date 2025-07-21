@@ -7,48 +7,41 @@
 UENUM(BlueprintType)
 enum class EIngredientState : uint8
 {
-	Raw        UMETA(DisplayName = "Raw"),
-	Sliced     UMETA(DisplayName = "Sliced"),
-	Rolled     UMETA(DisplayName = "Rolled"),
-	Cooked     UMETA(DisplayName = "Cooked"),
-	Finished   UMETA(DisplayName = "Finished")
+	Raw,
+	Sliced,
+	Rolled,
+	Finished
 };
 
 UCLASS()
 class SUSHIGAME_API AIngredientActor : public AActor
 {
 	GENERATED_BODY()
-
+	
 public:	
 	AIngredientActor();
 
-protected:
-	virtual void BeginPlay() override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* Mesh;
 
-	// State of the ingredient (e.g., Raw, Sliced, etc.)
-	UPROPERTY(ReplicatedUsing = OnRep_IngredientState, VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ingredient")
+	FName IngredientType; // Ex: SushiRoll, Peixe, Carne etc
+
+	UPROPERTY(ReplicatedUsing = OnRep_IngredientState)
 	EIngredientState IngredientState;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void SetIngredientState(EIngredientState NewState);
+	EIngredientState GetIngredientState() const { return IngredientState; }
 
 	UFUNCTION()
 	void OnRep_IngredientState();
 
-	// Static mesh for visual representation
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* Mesh;
-
-	void UpdateVisualForState();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-public:	
-	virtual void Tick(float DeltaTime) override;
-
-	// Called when the player interacts with the ingredient (via CookwareActor, etc)
+	UFUNCTION(BlueprintCallable)
 	void OnInteract();
 
-	UFUNCTION(BlueprintCallable)
-	EIngredientState GetIngredientState() const { return IngredientState; }
-
-	UFUNCTION(BlueprintCallable)
-	void SetIngredientState(EIngredientState NewState);
+protected:
+	virtual void BeginPlay() override;
+	void UpdateVisualForState();
 };

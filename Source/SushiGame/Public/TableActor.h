@@ -4,8 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "TableActor.generated.h"
 
-class UWidgetComponent;
-
 UCLASS()
 class SUSHIGAME_API ATableActor : public AActor
 {
@@ -14,10 +12,6 @@ class SUSHIGAME_API ATableActor : public AActor
 public:	
 	ATableActor();
 
-protected:
-	virtual void BeginPlay() override;
-
-public:	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* Root;
 
@@ -25,14 +19,24 @@ public:
 	UStaticMeshComponent* TableMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UWidgetComponent* TableOrderWidget;
+	class UWidgetComponent* TableOrderWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 TableID = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 TableID;
 
-	// Shows floating text
+	UPROPERTY(ReplicatedUsing = OnRep_OrderName)
+	FName CurrentOrderName;
+
+	UFUNCTION()
 	void UpdateFloatingOrderText(const FName& OrderName);
-	
-	UFUNCTION(BlueprintCallable)
+
+	UFUNCTION()
+	void OnRep_OrderName();
+
+	UFUNCTION()
 	void ClearFloatingOrderText();
+
+	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
