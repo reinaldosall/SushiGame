@@ -1,4 +1,6 @@
 #include "OrderManager.h"
+
+#include "OrderHUDWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
 
@@ -10,6 +12,15 @@ AOrderManager::AOrderManager()
 void AOrderManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HUDWidgetClass)
+	{
+		HUDWidgetInstance = CreateWidget<UOrderHUDWidget>(GetWorld(), HUDWidgetClass);
+		if (HUDWidgetInstance)
+		{
+			HUDWidgetInstance->AddToViewport();
+		}
+	}
 }
 
 void AOrderManager::Tick(float DeltaTime)
@@ -38,6 +49,23 @@ void AOrderManager::Tick(float DeltaTime)
 				Order.bCompleted = true;
 			}
 		}
+	}
+
+	if (HUDWidgetInstance)
+	{
+		TArray<FOrderDisplayData> DisplayList;
+		for (const FOrder& Order : ActiveOrders)
+		{
+			if (!Order.bCompleted)
+			{
+				FOrderDisplayData Data;
+				Data.RecipeName = Order.RecipeName;
+				Data.TimeRemaining = Order.TimeRemaining;
+				Data.TableID = Order.TargetTable ? Order.TargetTable->TableID : -1;
+				DisplayList.Add(Data);
+			}
+		}
+		HUDWidgetInstance->UpdateOrdersUI(DisplayList);
 	}
 }
 

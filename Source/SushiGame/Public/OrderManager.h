@@ -57,6 +57,12 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FOrder> ActiveOrders;
 
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UOrderHUDWidget> HUDWidgetClass;
+
+	UPROPERTY()
+	UOrderHUDWidget* HUDWidgetInstance;
+
 private:
 	float TimeSinceLastOrder = 0.0f;
 };
