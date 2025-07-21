@@ -1,5 +1,4 @@
 #include "OrderManager.h"
-
 #include "OrderHUDWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
@@ -47,10 +46,16 @@ void AOrderManager::Tick(float DeltaTime)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Order expired: %s"), *Order.RecipeName.ToString());
 				Order.bCompleted = true;
+
+				if (Order.TargetTable)
+				{
+					Order.TargetTable->ClearFloatingOrderText();
+				}
 			}
 		}
 	}
 
+	// Update HUD
 	if (HUDWidgetInstance)
 	{
 		TArray<FOrderDisplayData> DisplayList;
@@ -97,6 +102,11 @@ void AOrderManager::GenerateOrder()
 
 	ActiveOrders.Add(NewOrder);
 
+	if (TargetTable)
+	{
+		TargetTable->UpdateFloatingOrderText(ChosenRecipe);
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("New Order: %s for table %s"), *ChosenRecipe.ToString(), *TargetTable->GetName());
 }
 
@@ -107,6 +117,12 @@ bool AOrderManager::TryCompleteOrder(FName RecipeName, ATableActor* Table)
 		if (!Order.bCompleted && Order.RecipeName == RecipeName && Order.TargetTable == Table)
 		{
 			Order.bCompleted = true;
+
+			if (Order.TargetTable)
+			{
+				Order.TargetTable->ClearFloatingOrderText();
+			}
+
 			UE_LOG(LogTemp, Log, TEXT("Order completed: %s"), *RecipeName.ToString());
 			return true;
 		}

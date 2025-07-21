@@ -4,11 +4,13 @@
 #include "GameFramework/Actor.h"
 #include "TableActor.generated.h"
 
+class UWidgetComponent;
+
 UCLASS()
 class SUSHIGAME_API ATableActor : public AActor
 {
 	GENERATED_BODY()
-
+	
 public:	
 	ATableActor();
 
@@ -22,7 +24,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* TableMesh;
 
-	// Optionally assign a visible ID to the table for UI/debug
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UWidgetComponent* TableOrderWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 TableID = 0;
+
+	// Shows floating text
+	void UpdateFloatingOrderText(const FName& OrderName);
+	
+	UFUNCTION(BlueprintCallable)
+	void ClearFloatingOrderText();
 };
