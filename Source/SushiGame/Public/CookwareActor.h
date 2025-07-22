@@ -23,6 +23,24 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// Estado atual da cookware
+	UPROPERTY()
+	bool bIsCooking = false;
+
+	UPROPERTY()
+	bool bIsDone = false;
+
+	// Jogador que iniciou o processo de cooking
+	UPROPERTY()
+	APlayerController* LockedPlayer = nullptr;
+
+	// Timer do processo de cooking
+	FTimerHandle CookingTimerHandle;
+
+	// Callback após o tempo de cooking terminar
+	UFUNCTION()
+	void OnCookingFinished();
+	
 	// Simula tempo de preparo
 	UPROPERTY(EditDefaultsOnly, Category = "Cooking")
 	float ProcessingTime = 2.5f;
