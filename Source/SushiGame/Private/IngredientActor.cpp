@@ -1,4 +1,6 @@
 #include "IngredientActor.h"
+
+#include "Components/TextBlock.h"
 #include "Net/UnrealNetwork.h"
 
 AIngredientActor::AIngredientActor()
@@ -10,13 +12,28 @@ AIngredientActor::AIngredientActor()
 	RootComponent = Mesh;
 
 	IngredientState = EIngredientState::Raw;
-	IngredientType = FName("Default"); // Pode configurar no editor para tipos reais
+	IngredientType = FName("Default"); 
+
+	//Widget 
+	IngredientLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("IngredientLabel"));
+	IngredientLabel->SetupAttachment(RootComponent);
+	IngredientLabel->SetWidgetSpace(EWidgetSpace::Screen);
+	IngredientLabel->SetDrawSize(FVector2D(100.f, 40.f));
+	IngredientLabel->SetRelativeLocation(FVector(0, 0, 100.f));
 }
 
 void AIngredientActor::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateVisualForState();
+	
+	if (UUserWidget* Widget = IngredientLabel->GetUserWidgetObject())
+	{
+		if (UTextBlock* Text = Cast<UTextBlock>(Widget->GetWidgetFromName("IngredientText")))
+		{
+			Text->SetText(FText::FromName(IngredientType));
+		}
+	}
 }
 
 void AIngredientActor::OnInteract()
