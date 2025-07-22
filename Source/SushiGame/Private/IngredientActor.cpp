@@ -7,6 +7,7 @@ AIngredientActor::AIngredientActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+	SetReplicates(true);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;

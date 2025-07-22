@@ -37,24 +37,37 @@ void ACookwareActor::OnProcessingComplete()
 
 void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 {
+	UE_LOG(LogTemp, Warning, TEXT("CookwareActor::OnInteract called"));
 	if (!Ingredient) return;
 
-	EIngredientState CurrentState = Ingredient->GetIngredientState();
+	CurrentIngredient = Ingredient;
+	UpdateProgressWidget(); // atualiza UI sempre que tocar
 
-	UE_LOG(LogTemp, Warning, TEXT("Cookware interacted! Ingredient state: %d"), (int32)CurrentState);
+	UE_LOG(LogTemp, Warning, TEXT("Ingredient passed to cookware: %s"), *Ingredient->GetName());
+
+	EIngredientState CurrentState = Ingredient->GetIngredientState();
 
 	switch (CurrentState)
 	{
 	case EIngredientState::Raw:
 		Ingredient->SetIngredientState(EIngredientState::Sliced);
+		UE_LOG(LogTemp, Warning, TEXT("Changed state to: %d"), (int32)Ingredient->GetIngredientState());
+
 		break;
 	case EIngredientState::Sliced:
 		Ingredient->SetIngredientState(EIngredientState::Rolled);
+		UE_LOG(LogTemp, Warning, TEXT("Changed state to: %d"), (int32)Ingredient->GetIngredientState());
+
+		break;
+	case EIngredientState::Rolled:
+		Ingredient->SetIngredientState(EIngredientState::Finished);
+		UE_LOG(LogTemp, Warning, TEXT("Changed state to: %d"), (int32)Ingredient->GetIngredientState());
+
 		break;
 	default:
 		break;
 	}
-
+	
 	ASushiPlayerCharacter* Player = Cast<ASushiPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (Player)
 	{
