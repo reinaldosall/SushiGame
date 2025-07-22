@@ -50,5 +50,8 @@ public:
 	UPROPERTY(Replicated)
 	int32 RecipeProgress;
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerPickupIngredient(AIngredientActor* Ingredient);
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

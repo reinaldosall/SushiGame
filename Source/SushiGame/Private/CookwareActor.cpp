@@ -1,6 +1,7 @@
 #include "CookwareActor.h"
 #include "IngredientActor.h"
 #include "SushiPlayerCharacter.h"
+#include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -8,6 +9,15 @@ ACookwareActor::ACookwareActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+
+	CookwareMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CookwareMesh"));
+	RootComponent = CookwareMesh;
+
+	ProgressWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ProgressWidget"));
+	ProgressWidget->SetupAttachment(RootComponent);
+	ProgressWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	ProgressWidget->SetDrawSize(FVector2D(150.f, 40.f));
+	ProgressWidget->SetRelativeLocation(FVector(0, 0, 120.f)); 
 }
 
 void ACookwareActor::BeginPlay()
@@ -63,6 +73,9 @@ void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 			}
 		}
 	}
+	
+	CurrentIngredient = Ingredient;
+	UpdateProgressWidget();
 }
 
 void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -71,4 +84,43 @@ void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(ACookwareActor, CurrentIngredient);
 	DOREPLIFETIME(ACookwareActor, bIsProcessing);
+}
+
+void ACookwareActor::OnRep_CurrentIngredient()
+{
+	UpdateProgressWidget();
+}
+
+void ACookwareActor::UpdateProgressWidget()
+{
+	if (!CurrentIngredient || !ProgressWidget) return;
+
+	UUserWidget* Widget = ProgressWidget->GetUserWidgetObject();
+	if (!Widget) return;
+
+	if (UTextBlock* Text = Cast<UTextBlock>(Widget->GetWidgetFromName("ProgressText")))
+	{
+		FString StateStr;
+
+		switch (CurrentIngredient->GetIngredientState())
+		{
+		case EIngredientState::Raw:
+			StateStr = "Raw";
+			break;
+		case EIngredientState::Sliced:
+			StateStr = "Sliced";
+			break;
+		case EIngredientState::Rolled:
+			StateStr = "Rolled";
+			break;
+		case EIngredientState::Finished:
+			StateStr = "Complete";
+			break;
+		default:
+			StateStr = "Unknown";
+			break;
+		}
+
+		Text->SetText(FText::FromString(StateStr));
+	}
 }

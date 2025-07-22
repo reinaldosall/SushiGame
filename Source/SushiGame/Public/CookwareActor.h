@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/WidgetComponent.h"
 #include "CookwareActor.generated.h"
 
 class AIngredientActor;
@@ -14,36 +15,50 @@ class SUSHIGAME_API ACookwareActor : public AActor
 public:	
 	ACookwareActor();
 
+	virtual void Tick(float DeltaTime) override;
+
+	// Interação com ingrediente
+	void OnInteract(AIngredientActor* Ingredient);
+
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
-
-	// Called when the player interacts with this actor
-	void OnInteract(AIngredientActor* Ingredient);
-
-	// Simulates time needed to process an ingredient
+	// Simula tempo de preparo
 	UPROPERTY(EditDefaultsOnly, Category = "Cooking")
-	float ProcessingTime = 2.5f;	
+	float ProcessingTime = 2.5f;
 
-protected:
-	// Current ingredient being processed
-	UPROPERTY(Replicated)
+	// Ingrediente atual sendo processado
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentIngredient)
 	AIngredientActor* CurrentIngredient;
 
-	// Whether we are currently processing
+	// Indica se está processando
 	UPROPERTY(Replicated)
 	bool bIsProcessing;
 
-	// Timer handle
-	FTimerHandle ProcessingTimerHandle;
+	// Widget de progresso
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UWidgetComponent* ProgressWidget;
 
+	// Atualiza o widget com o estado do ingrediente
+	void UpdateProgressWidget();
+
+	// Chamado quando CurrentIngredient é replicado
+	UFUNCTION()
+	void OnRep_CurrentIngredient();
+
+	// Conclui o processamento
 	UFUNCTION()
 	void OnProcessingComplete();
 
+	// Inicia o processamento
 	void StartProcessing(AIngredientActor* Ingredient);
 
-	// Replication setup
+	// Timer do processamento
+	FTimerHandle ProcessingTimerHandle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
+	UStaticMeshComponent* CookwareMesh;
+
+	// Replicação
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

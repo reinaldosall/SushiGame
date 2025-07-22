@@ -87,6 +87,7 @@ void ASushiPlayerCharacter::LookUp(float Rate)
 
 void ASushiPlayerCharacter::Interact()
 {
+	
 	FVector Start = GetActorLocation() + FVector(0, 0, 50);
 	FVector End = Start + GetActorForwardVector() * 300.f;
 
@@ -95,10 +96,18 @@ void ASushiPlayerCharacter::Interact()
 
 	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 2.0f);
 
-	FHitResult CookwareHit;
-	if (GetWorld()->LineTraceSingleByChannel(CookwareHit, Start, End, ECC_Visibility, Params))
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
 	{
-		if (ACookwareActor* Cookware = Cast<ACookwareActor>(CookwareHit.GetActor()))
+		// Primeiro verifica se é ingrediente
+		if (AIngredientActor* Ingredient = Cast<AIngredientActor>(Hit.GetActor()))
+		{
+			ServerPickupIngredient(Ingredient);
+			return;
+		}
+
+		// Depois verifica se é cookware
+		if (ACookwareActor* Cookware = Cast<ACookwareActor>(Hit.GetActor()))
 		{
 			FVector CheckStart = GetActorLocation() + FVector(0, 0, 50);
 			FVector CheckEnd = CheckStart + GetActorForwardVector() * 150.f;
@@ -114,7 +123,7 @@ void ASushiPlayerCharacter::Interact()
 				}
 			}
 		}
-	}
+	}	
 }
 
 void ASushiPlayerCharacter::ServerInteractWith_Implementation(ACookwareActor* Cookware, AIngredientActor* Ingredient)
@@ -197,4 +206,19 @@ void ASushiPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ASushiPlayerCharacter, HeldRecipe);
 	DOREPLIFETIME(ASushiPlayerCharacter, RecipeProgress);
+}
+
+void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientActor* Ingredient)
+{
+	if (Ingredient && HeldRecipe.IsNone())
+	{
+		HeldRecipe = Ingredient->IngredientType;
+		RecipeProgress = 0;
+		UE_LOG(LogTemp, Log, TEXT("Picked up ingredient: %s"), *HeldRecipe.ToString());
+	}
+}
+
+bool ASushiPlayerCharacter::ServerPickupIngredient_Validate(AIngredientActor* Ingredient)
+{
+	return true;
 }
