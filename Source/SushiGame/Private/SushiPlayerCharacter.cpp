@@ -1,6 +1,7 @@
 #include "SushiPlayerCharacter.h"
 #include "CookwareActor.h"
 #include "IngredientActor.h"
+#include "PlayerStatusWidget.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -8,7 +9,9 @@
 #include "TableActor.h"
 #include "SushiPlayerState.h"
 #include "EngineUtils.h"
+#include "SushiPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Net/RepLayout.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -215,9 +218,15 @@ bool ASushiPlayerCharacter::ServerDeliverDish_Validate(FName RecipeName, ATableA
 void ASushiPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	//DOREPLIFETIME(ASushiPlayerCharacter, HeldRecipe);
+	//DOREPLIFETIME(ASushiPlayerCharacter, RecipeProgress);
+	//DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, HeldRecipe, COND_OwnerOnly, REPNOTIFY_Always);
+	//DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, RecipeProgress, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, HeldRecipe, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, RecipeProgress, COND_None, REPNOTIFY_Always);
 
-	DOREPLIFETIME(ASushiPlayerCharacter, HeldRecipe);
-	DOREPLIFETIME(ASushiPlayerCharacter, RecipeProgress);
+
+
 }
 
 void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientActor* Ingredient)
@@ -226,8 +235,13 @@ void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientAct
 	{
 		HeldRecipe = Ingredient->IngredientType;
 		RecipeProgress = 0;
-
+		
 		UE_LOG(LogTemp, Warning, TEXT("Picked up ingredient: %s"), *HeldRecipe.ToString());
+
+		if (IsLocallyControlled())  
+		{
+			UpdatePlayerStatusUI();
+		}
 	}
 }
 
@@ -235,4 +249,50 @@ void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientAct
 bool ASushiPlayerCharacter::ServerPickupIngredient_Validate(AIngredientActor* Ingredient)
 {
 	return true;
+}
+
+void ASushiPlayerCharacter::OnRep_HeldRecipe()
+{
+	UE_LOG(LogTemp, Warning, TEXT(">>> OnRep_HeldRecipe triggered"));
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("OnRep_HeldRecipe called!"));
+	UpdatePlayerStatusUI();
+}
+
+void ASushiPlayerCharacter::OnRep_RecipeProgress()
+{
+	UE_LOG(LogTemp, Warning, TEXT(">>> OnRep_RecipeProgress triggered"));
+	UpdatePlayerStatusUI();
+}
+
+void ASushiPlayerCharacter::UpdatePlayerStatusUI()
+{
+	if (!this->IsLocallyControlled()) return;
+	UE_LOG(LogTemp, Warning, TEXT(">>> UpdatePlayerStatusUI() CALLED <<<"));
+	APlayerController* PC = Cast<APlayerController>(this->GetController());
+	if (PC)
+	{
+		ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC);
+		if (SPC && SPC->PlayerStatusWidgetInstance)
+		{
+			FString RecipeStr = HeldRecipe.IsNone() ? TEXT("None") : HeldRecipe.ToString();
+			FString StepStr = TEXT("Unknown");
+
+			switch (RecipeProgress)
+			{
+			case 0: StepStr = "None"; break;
+			case 1: StepStr = "Sliced"; break;
+			case 2: StepStr = "Rolled"; break;
+			case 3: StepStr = "Finished"; break;
+			default: StepStr = "Unknown"; break;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("Calling UpdateStatus on widget: %s"), *RecipeStr);
+			UE_LOG(LogTemp, Warning, TEXT("PlayerStatusWidgetInstance = %s"),
+				
+			SPC && SPC->PlayerStatusWidgetInstance ? TEXT("VALID") : TEXT("NULL"));
+			UE_LOG(LogTemp, Warning, TEXT(">>> UpdatePlayerStatusUI() called — Recipe: %s, Step: %s"),
+	*RecipeStr, *StepStr);
+			SPC->PlayerStatusWidgetInstance->UpdateStatus(RecipeStr, StepStr);
+		}
+	}
+	
 }

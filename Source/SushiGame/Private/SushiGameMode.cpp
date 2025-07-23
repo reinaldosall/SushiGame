@@ -1,16 +1,14 @@
 #include "SushiGameMode.h"
+#include "SushiPlayerController.h"
 #include "SushiPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "PlayerStatusWidget.h"
 
 ASushiGameMode::ASushiGameMode()
 {
 	PlayerStateClass = ASushiPlayerState::StaticClass();
-	// ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
-	// if (PlayerPawnBPClass.Class != nullptr)
-	// {
-	// 	DefaultPawnClass = PlayerPawnBPClass.Class;
-	// }
+	PlayerControllerClass = ASushiPlayerController::StaticClass();
 }
 
 void ASushiGameMode::BeginPlay()
@@ -20,9 +18,7 @@ void ASushiGameMode::BeginPlay()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
 	if (!PC || PC->GetPawn()) return;
 
-	// Caminho do seu Blueprint
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
-
 	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		FVector SpawnLocation = FVector(0, 0, 200);

@@ -44,14 +44,23 @@ protected:
 	class UCameraComponent* FollowCamera;
 
 public:
-	UPROPERTY(Replicated)
-	FName HeldRecipe;
 
-	UPROPERTY(Replicated)
+	UFUNCTION()
+	void OnRep_HeldRecipe();
+
+	UFUNCTION()
+	void OnRep_RecipeProgress();
+	
+	UPROPERTY(ReplicatedUsing = OnRep_RecipeProgress)
 	int32 RecipeProgress;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerPickupIngredient(AIngredientActor* Ingredient);
+
+	UPROPERTY(ReplicatedUsing = OnRep_HeldRecipe)
+	FName HeldRecipe;
+
+	void UpdatePlayerStatusUI();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
