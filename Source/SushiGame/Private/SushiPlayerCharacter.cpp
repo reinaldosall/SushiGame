@@ -115,38 +115,28 @@ void ASushiPlayerCharacter::Interact()
 
 			if (!HeldRecipe.IsNone())
 			{
-				for (TActorIterator<AIngredientActor> It(GetWorld()); It; ++It)
-				{
-					AIngredientActor* Ingredient = *It;
-					if (Ingredient && Ingredient->IngredientType == HeldRecipe)
-					{
-						ServerInteractWith(Cookware, Ingredient);
-						return;
-					}
-				}
-
-				UE_LOG(LogTemp, Warning, TEXT("No ingredient found matching held recipe: %s"), *HeldRecipe.ToString());
+				ServerInteractWith(Cookware);
 			}
 		}
 	}
 }
 
 
-void ASushiPlayerCharacter::ServerInteractWith_Implementation(ACookwareActor* Cookware, AIngredientActor* Ingredient)
+void ASushiPlayerCharacter::ServerInteractWith_Implementation(ACookwareActor* Cookware)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ServerInteractWith called"));
-	UE_LOG(LogTemp, Warning, TEXT("ServerInteractWith called with %s and %s"),
-	*GetNameSafe(Cookware), *GetNameSafe(Ingredient));
-	if (Cookware && Ingredient)
-	{
-		Cookware->OnInteract(Ingredient);
-	}
+	if (!Cookware || HeldRecipe.IsNone()) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("ServerInteractWith called — Player: %s, Recipe: %s"),
+		*GetName(), *HeldRecipe.ToString());
+
+	Cookware->OnInteract(this); // Passa a si mesmo
 }
 
-bool ASushiPlayerCharacter::ServerInteractWith_Validate(ACookwareActor* Cookware, AIngredientActor* Ingredient)
+bool ASushiPlayerCharacter::ServerInteractWith_Validate(ACookwareActor* Cookware)
 {
 	return true;
 }
+
 
 void ASushiPlayerCharacter::DeliverDish()
 {

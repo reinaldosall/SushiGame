@@ -31,8 +31,8 @@ protected:
 	void Interact();
 	void DeliverDish();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerInteractWith(ACookwareActor* Cookware, AIngredientActor* Ingredient);
+	// UFUNCTION(Server, Reliable, WithValidation)
+	// void ServerInteractWith(ACookwareActor* Cookware, AIngredientActor* Ingredient);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerDeliverDish(FName RecipeName, ATableActor* Table);
@@ -59,6 +59,8 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_HeldRecipe)
 	FName HeldRecipe;
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerInteractWith(class ACookwareActor* Cookware);
 
 	void UpdatePlayerStatusUI();
 
