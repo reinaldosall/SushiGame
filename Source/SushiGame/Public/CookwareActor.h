@@ -11,72 +11,58 @@ UCLASS()
 class SUSHIGAME_API ACookwareActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ACookwareActor();
-
-	virtual void Tick(float DeltaTime) override;
-
-	// Interação com ingrediente
-	void OnInteract(AIngredientActor* Ingredient);
 
 protected:
 	virtual void BeginPlay() override;
 
-	// Estado atual da cookware
-	UPROPERTY()
-	bool bIsCooking = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* CookwareMesh;
 
-	UPROPERTY()
-	bool bIsDone = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UWidgetComponent* ProgressWidget;
 
-	// Jogador que iniciou o processo de cooking
-	UPROPERTY()
-	APlayerController* LockedPlayer = nullptr;
-
-	// Timer do processo de cooking
-	FTimerHandle CookingTimerHandle;
-
-	// Callback após o tempo de cooking terminar
-	UFUNCTION()
-	void OnCookingFinished();
-	
-	// Simula tempo de preparo
-	UPROPERTY(EditDefaultsOnly, Category = "Cooking")
-	float ProcessingTime = 2.5f;
-
-	// Ingrediente atual sendo processado
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentIngredient)
 	AIngredientActor* CurrentIngredient;
 
-	// Indica se está processando
-	UPROPERTY(Replicated)
-	bool bIsProcessing;
+	UPROPERTY(ReplicatedUsing = OnRep_IsCooking)
+	bool bIsCooking;
 
-	// Widget de progresso
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UWidgetComponent* ProgressWidget;
+	UPROPERTY(ReplicatedUsing = OnRep_IsDone)
+	bool bIsDone;
 
-	// Atualiza o widget com o estado do ingrediente
+	UPROPERTY()
+	APlayerController* LockedPlayer;
+
+	FTimerHandle CookingTimerHandle;
+
+public:
+	virtual void Tick(float DeltaTime) override;
+
+	void OnInteract(AIngredientActor* Ingredient);
+	void OnProcessingComplete();
+
+	UFUNCTION()
+	void OnCookingFinished();
+
 	void UpdateProgressWidget();
 
-	// Chamado quando CurrentIngredient é replicado
 	UFUNCTION()
 	void OnRep_CurrentIngredient();
 
-	// Conclui o processamento
 	UFUNCTION()
-	void OnProcessingComplete();
+	void OnRep_IsCooking();
 
-	// Inicia o processamento
-	void StartProcessing(AIngredientActor* Ingredient);
+	UFUNCTION()
+	void OnRep_IsDone();
 
-	// Timer do processamento
-	FTimerHandle ProcessingTimerHandle;
+	UPROPERTY()
+	float CookingElapsedTime;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
-	UStaticMeshComponent* CookwareMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Cooking")
+	float CookingDuration = 5.0f;
 
-	// Replicação
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

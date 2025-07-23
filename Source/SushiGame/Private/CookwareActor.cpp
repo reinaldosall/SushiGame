@@ -8,153 +8,181 @@
 
 ACookwareActor::ACookwareActor()
 {
-    PrimaryActorTick.bCanEverTick = true;
-    bReplicates = true;
+	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
-    CookwareMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CookwareMesh"));
-    RootComponent = CookwareMesh;
+	CookwareMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CookwareMesh"));
+	RootComponent = CookwareMesh;
 
-    ProgressWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ProgressWidget"));
-    ProgressWidget->SetupAttachment(RootComponent);
-    ProgressWidget->SetWidgetSpace(EWidgetSpace::Screen);
-    ProgressWidget->SetDrawSize(FVector2D(150.f, 40.f));
-    ProgressWidget->SetRelativeLocation(FVector(0, 0, 120.f));
+	ProgressWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ProgressWidget"));
+	ProgressWidget->SetupAttachment(RootComponent);
+	ProgressWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	ProgressWidget->SetDrawSize(FVector2D(150.f, 40.f));
+	ProgressWidget->SetRelativeLocation(FVector(0, 0, 120.f));
+
+	bIsCooking = false;
+	bIsDone = false;
+	CurrentIngredient = nullptr;
+	LockedPlayer = nullptr;
 }
 
 void ACookwareActor::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
+	UpdateProgressWidget();
 }
 
 void ACookwareActor::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-}
+	Super::Tick(DeltaTime);
 
-void ACookwareActor::OnProcessingComplete()
-{
-    UE_LOG(LogTemp, Log, TEXT("Processing completed in Cookware."));
+	if (bIsCooking)
+	{
+		CookingElapsedTime += DeltaTime;
+		if (CookingElapsedTime > CookingDuration)
+		{
+			CookingElapsedTime = CookingDuration;
+		}
+		UpdateProgressWidget();
+	}
 }
 
 void ACookwareActor::OnInteract(AIngredientActor* Ingredient)
 {
-    UE_LOG(LogTemp, Warning, TEXT("CookwareActor::OnInteract called"));
-    if (!Ingredient || bIsCooking) return;
+	if (!Ingredient || bIsCooking) return;
 
-    APlayerController* PlayerController = Cast<APlayerController>(UGameplayStatics::GetPlayerController(this, 0));
-    if (bIsDone && PlayerController == LockedPlayer)
-    {
-        Ingredient->SetIngredientState(EIngredientState::Finished);
-        bIsDone = false;
-        LockedPlayer = nullptr;
-        CurrentIngredient = nullptr;
-        UpdateProgressWidget();
-        return;
-    }
+	CookingElapsedTime = 0.f;
+	APlayerController* PlayerController = Cast<APlayerController>(UGameplayStatics::GetPlayerController(this, 0));
 
-    UE_LOG(LogTemp, Warning, TEXT("Ingredient passed to cookware: %s"), *Ingredient->GetName());
-    EIngredientState CurrentState = Ingredient->GetIngredientState();
+	if (bIsDone && PlayerController == LockedPlayer)
+	{
+		Ingredient->SetIngredientState(EIngredientState::Finished);
+		bIsDone = false;
+		LockedPlayer = nullptr;
+		CurrentIngredient = nullptr;
+		UpdateProgressWidget();
+		return;
+	}
 
-    switch (CurrentState)
-    {
-    case EIngredientState::Raw:
-        Ingredient->SetIngredientState(EIngredientState::Sliced);
-        break;
-    case EIngredientState::Sliced:
-        Ingredient->SetIngredientState(EIngredientState::Rolled);
-        break;
-    case EIngredientState::Rolled:
-        bIsCooking = true;
-        LockedPlayer = PlayerController;
-        GetWorld()->GetTimerManager().SetTimer(CookingTimerHandle, this, &ACookwareActor::OnCookingFinished, 5.0f, false);
-        break;
-    default:
-        break;
-    }
+	EIngredientState CurrentState = Ingredient->GetIngredientState();
 
-    ASushiPlayerCharacter* Player = Cast<ASushiPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    if (Player)
-    {
-        if (Player->HeldRecipe.IsNone())
-        {
-            Player->HeldRecipe = Ingredient->IngredientType;
-            Player->RecipeProgress = 1;
-        }
-        else if (Player->HeldRecipe == Ingredient->IngredientType)
-        {
-            if (Player->RecipeProgress < 3)
-            {
-                Player->RecipeProgress++;
-            }
-        }
-    }
+	switch (CurrentState)
+	{
+	case EIngredientState::Raw:
+		Ingredient->SetIngredientState(EIngredientState::Sliced);
+		break;
+	case EIngredientState::Sliced:
+		Ingredient->SetIngredientState(EIngredientState::Rolled);
+		break;
+	case EIngredientState::Rolled:
+		bIsCooking = true;
+		LockedPlayer = PlayerController;
+		GetWorld()->GetTimerManager().SetTimer(CookingTimerHandle, this, &ACookwareActor::OnCookingFinished, 5.0f, false);
+		break;
+	default:
+		break;
+	}
 
-    CurrentIngredient = Ingredient;
-    UpdateProgressWidget();
+	ASushiPlayerCharacter* Player = Cast<ASushiPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (Player)
+	{
+		if (Player->HeldRecipe.IsNone())
+		{
+			Player->HeldRecipe = Ingredient->IngredientType;
+			Player->RecipeProgress = 1;
+		}
+		else if (Player->HeldRecipe == Ingredient->IngredientType && Player->RecipeProgress < 3)
+		{
+			Player->RecipeProgress++;
+		}
+	}
+
+	CurrentIngredient = Ingredient;
+	UpdateProgressWidget();
 }
 
 void ACookwareActor::OnCookingFinished()
 {
-    bIsCooking = false;
-    bIsDone = true;
-    UpdateProgressWidget();
+	bIsCooking = false;
+	bIsDone = true;
+	UpdateProgressWidget();
 }
 
 void ACookwareActor::UpdateProgressWidget()
 {
-    if (!ProgressWidget) return;
+	if (!ProgressWidget) return;
 
-    UUserWidget* Widget = ProgressWidget->GetUserWidgetObject();
-    if (!Widget) return;
+	UUserWidget* Widget = ProgressWidget->GetUserWidgetObject();
+	if (!Widget) return;
 
-    UTextBlock* Text = Cast<UTextBlock>(Widget->GetWidgetFromName("ProgressText"));
-    UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName("ProgressBar"));
+	UTextBlock* Text = Cast<UTextBlock>(Widget->GetWidgetFromName("ProgressText"));
+	UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName("ProgressBar"));
 
-    FString StateStr = "Idle";
+	FString StateStr = "Idle";
 
-    if (bIsCooking)
-    {
-        StateStr = "Cooking";
-        if (Bar) Bar->SetVisibility(ESlateVisibility::Visible);
-    }
-    else if (bIsDone)
-    {
-        StateStr = "Done";
-        if (Bar) Bar->SetVisibility(ESlateVisibility::Hidden);
-    }
-    else if (CurrentIngredient)
-    {
-        switch (CurrentIngredient->GetIngredientState())
-        {
-        case EIngredientState::Raw:
-            StateStr = "Raw"; break;
-        case EIngredientState::Sliced:
-            StateStr = "Sliced"; break;
-        case EIngredientState::Rolled:
-            StateStr = "Rolled"; break;
-        case EIngredientState::Finished:
-            StateStr = "Complete"; break;
-        default:
-            StateStr = "Unknown"; break;
-        }
-        if (Bar) Bar->SetVisibility(ESlateVisibility::Hidden);
-    }
+	if (bIsCooking)
+	{
+		StateStr = "Cooking";		 
+		if (Bar)
+		{
+			Bar->SetVisibility(ESlateVisibility::Visible);
+			Bar->SetPercent(CookingElapsedTime / CookingDuration);
+		}
+	}
+	else if (bIsDone)
+	{
+		StateStr = "Done";
+		if (Bar) Bar->SetVisibility(ESlateVisibility::Hidden);
+	}
+	else if (CurrentIngredient)
+	{
+		switch (CurrentIngredient->GetIngredientState())
+		{
+		case EIngredientState::Raw:
+			StateStr = "Raw"; break;
+		case EIngredientState::Sliced:
+			StateStr = "Sliced"; break;
+		case EIngredientState::Rolled:
+			StateStr = "Rolled"; break;
+		case EIngredientState::Finished:
+			StateStr = "Complete"; break;
+		default:
+			StateStr = "Unknown"; break;
+		}
+		if (Bar) Bar->SetVisibility(ESlateVisibility::Hidden);
+	}
 
-    if (Text)
-    {
-        Text->SetText(FText::FromString(StateStr));
-    }
+	if (Text)
+	{
+		Text->SetText(FText::FromString(StateStr));
+	}
 }
 
 void ACookwareActor::OnRep_CurrentIngredient()
 {
-    UpdateProgressWidget();
+	UpdateProgressWidget();
+}
+
+void ACookwareActor::OnRep_IsCooking()
+{
+	UpdateProgressWidget();
+}
+
+void ACookwareActor::OnRep_IsDone()
+{
+	UpdateProgressWidget();
+}
+
+void ACookwareActor::OnProcessingComplete()
+{
+	UE_LOG(LogTemp, Log, TEXT("Processing completed in Cookware."));
 }
 
 void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(ACookwareActor, CurrentIngredient);
-    DOREPLIFETIME(ACookwareActor, bIsProcessing);
+	DOREPLIFETIME(ACookwareActor, CurrentIngredient);
+	DOREPLIFETIME(ACookwareActor, bIsCooking);
+	DOREPLIFETIME(ACookwareActor, bIsDone);
 }
