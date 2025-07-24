@@ -8,35 +8,45 @@ UCLASS()
 class SUSHIGAME_API ATableActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ATableActor();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+protected:
+	virtual void BeginPlay() override;
+
+	// Componente raiz
+	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	// Mesh da mesa
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* TableMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	// Widget flutuante com o nome da ordem
+	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TableOrderWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 TableID;
-
+	// Nome da receita esperada
 	UPROPERTY(ReplicatedUsing = OnRep_OrderName)
 	FName CurrentOrderName;
 
 	UFUNCTION()
-	void UpdateFloatingOrderText(const FName& OrderName);
-
-	UFUNCTION()
 	void OnRep_OrderName();
 
-	UFUNCTION()
+	// Feedback visual de acerto/erro
+	FTimerHandle FeedbackResetTimer;
+
+public:	
+	// Atualiza o nome da ordem
+	void UpdateFloatingOrderText(const FName& OrderName);
 	void ClearFloatingOrderText();
 
-	virtual void BeginPlay() override;
+	void SetFeedbackText(const FString& Text);
+	void ResetFeedbackText();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Order")
+	int32 TableID = -1;
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

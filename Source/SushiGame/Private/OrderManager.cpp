@@ -9,6 +9,9 @@ AOrderManager::AOrderManager()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	bAlwaysRelevant = true;
+
+	EditorIcon = CreateDefaultSubobject<UBillboardComponent>(TEXT("EditorIcon"));
+	RootComponent = EditorIcon;
 }
 
 void AOrderManager::BeginPlay()

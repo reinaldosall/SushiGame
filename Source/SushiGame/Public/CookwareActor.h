@@ -4,7 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "CookwareActor.generated.h"
 
-class UStaticMeshComponent;
 class UWidgetComponent;
 class AIngredientActor;
 class ASushiPlayerCharacter;
@@ -18,34 +17,44 @@ public:
 	ACookwareActor();
 	virtual void Tick(float DeltaTime) override;
 
+	// Interação com o jogador
 	void OnInteract(ASushiPlayerCharacter* Player);
 
 protected:
 	virtual void BeginPlay() override;
 
-	// Mesh e Widget
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* CookwareMesh;
+	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* ProgressWidget;
 
-	// Cooking logic
-	UPROPERTY()
-	ASushiPlayerCharacter* CookingPlayer;
+	UPROPERTY(ReplicatedUsing = OnRep_RecipeProgress)
+	int32 SharedRecipeProgress = 0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsCooking)
+	bool bIsCooking = false;
 
 	UPROPERTY()
-	bool bIsCooking;
+	ASushiPlayerCharacter* LockedPlayer;
 
-	UPROPERTY()
-	float CookingProgress;
+	FTimerHandle CookingTimerHandle;
+	float CookingElapsedTime = 0.f;
+	float CookingDuration = 5.f;
 
-	UPROPERTY(EditDefaultsOnly)
-	float CookingDuration = 5.0f;
+	void StartCooking(ASushiPlayerCharacter* Player);
+	void FinishCooking();
 
-	FTimerHandle ResetTimerHandle;
+	UFUNCTION()
+	void OnRep_RecipeProgress();
 
-	// UI helpers
-	void UpdateProgressWidget(const FString& StatusText, float Percent);
-	void ResetProgressWidget();
+	UFUNCTION()
+	void OnRep_IsCooking();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdateProgress();
+
+	void UpdateProgressUI();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

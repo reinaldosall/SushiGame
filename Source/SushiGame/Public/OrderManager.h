@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/BillboardComponent.h"
 #include "OrderManager.generated.h"
 
 class ATableActor;
@@ -40,18 +41,21 @@ class SUSHIGAME_API AOrderManager : public AActor
 
 public:
 	AOrderManager();
+	
+	UPROPERTY(VisibleAnywhere)
+	UBillboardComponent* EditorIcon;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Orders")
 	TArray<FName> AvailableRecipes;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Orders")
 	float MaxOrderTime = 20.0f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Orders")
 	float OrderInterval = 5.0f;
 
 	UPROPERTY()

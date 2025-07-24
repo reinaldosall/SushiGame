@@ -113,10 +113,14 @@ void ASushiPlayerCharacter::Interact()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Cookware hit: %s"), *Cookware->GetName());
 
-			if (!HeldRecipe.IsNone())
-			{
-				ServerInteractWith(Cookware);
-			}
+			// if (!HeldRecipe.IsNone())
+			// {
+			// 	ServerInteractWith(Cookware);
+			// }
+			// Dentro do LineTrace de hit:
+						
+			ServerInteractWith(Cookware);
+
 		}
 	}
 }
@@ -128,8 +132,11 @@ void ASushiPlayerCharacter::ServerInteractWith_Implementation(ACookwareActor* Co
 
 	UE_LOG(LogTemp, Warning, TEXT("ServerInteractWith called — Player: %s, Recipe: %s"),
 		*GetName(), *HeldRecipe.ToString());
-
-	Cookware->OnInteract(this); // Passa a si mesmo
+	if (Cookware)
+	{
+		Cookware->OnInteract(this);
+	}
+	//Cookware->OnInteract(this); // Passa a si mesmo
 }
 
 bool ASushiPlayerCharacter::ServerInteractWith_Validate(ACookwareActor* Cookware)
@@ -165,12 +172,17 @@ void ASushiPlayerCharacter::DeliverDish()
 
 void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, ATableActor* Table)
 {
-	if (RecipeProgress < 3)
+	if (!Table) return;
+
+	if (RecipeProgress < 4)
 	{
 		if (ASushiPlayerState* PS = Cast<ASushiPlayerState>(GetPlayerState()))
 		{
 			PS->AddScore(-50);
 		}
+
+		// Feedback visual de erro
+		Table->SetFeedbackText("X");
 		return;
 	}
 
@@ -188,12 +200,14 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 			{
 			case EDeliveryResult::Success:
 				PS->AddScore(100);
+				Table->SetFeedbackText("✓");
 				HeldRecipe = NAME_None;
 				RecipeProgress = 0;
 				break;
 			case EDeliveryResult::WrongRecipe:
 			case EDeliveryResult::WrongTable:
 				PS->AddScore(-50);
+				Table->SetFeedbackText("X");
 				break;
 			}
 		}
@@ -256,33 +270,29 @@ void ASushiPlayerCharacter::OnRep_RecipeProgress()
 
 void ASushiPlayerCharacter::UpdatePlayerStatusUI()
 {
-	if (!this->IsLocallyControlled()) return;
-	UE_LOG(LogTemp, Warning, TEXT(">>> UpdatePlayerStatusUI() CALLED <<<"));
-	APlayerController* PC = Cast<APlayerController>(this->GetController());
-	if (PC)
-	{
-		ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC);
-		if (SPC && SPC->PlayerStatusWidgetInstance)
-		{
-			FString RecipeStr = HeldRecipe.IsNone() ? TEXT("None") : HeldRecipe.ToString();
-			FString StepStr = TEXT("Unknown");
+	if (!IsLocallyControlled()) return;
 
-			switch (RecipeProgress)
-			{
-			case 0: StepStr = "None"; break;
-			case 1: StepStr = "Sliced"; break;
-			case 2: StepStr = "Rolled"; break;
-			case 3: StepStr = "Finished"; break;
-			default: StepStr = "Unknown"; break;
-			}
-			UE_LOG(LogTemp, Warning, TEXT("Calling UpdateStatus on widget: %s"), *RecipeStr);
-			UE_LOG(LogTemp, Warning, TEXT("PlayerStatusWidgetInstance = %s"),
-				
-			SPC && SPC->PlayerStatusWidgetInstance ? TEXT("VALID") : TEXT("NULL"));
-			UE_LOG(LogTemp, Warning, TEXT(">>> UpdatePlayerStatusUI() called — Recipe: %s, Step: %s"),
-	*RecipeStr, *StepStr);
-			SPC->PlayerStatusWidgetInstance->UpdateStatus(RecipeStr, StepStr);
-		}
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC);
+	if (!SPC || !SPC->PlayerStatusWidgetInstance) return;
+
+	FString RecipeStr = HeldRecipe.IsNone() ? TEXT("None") : HeldRecipe.ToString();
+	FString StepStr = TEXT("Unknown");
+
+	switch (RecipeProgress)
+	{
+	case 0: StepStr = "None"; break;
+	case 1: StepStr = "Sliced"; break;
+	case 2: StepStr = "Rolled"; break;
+	case 3: StepStr = "Cooking"; break;
+	case 4: StepStr = "Done"; break; // ✅ Destaca que a receita está pronta para entregar
+	default: StepStr = "Unknown"; break;
 	}
-	
+
+	UE_LOG(LogTemp, Warning, TEXT(">>> UpdatePlayerStatusUI() called — Recipe: %s, Step: %s"),
+		*RecipeStr, *StepStr);
+
+	SPC->PlayerStatusWidgetInstance->UpdateStatus(RecipeStr, StepStr);
 }
