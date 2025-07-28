@@ -27,6 +27,14 @@ void ACookwareActor::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateProgressUI();
+	if (!HasAuthority())
+	{
+		FTimerHandle TempHandle;
+		GetWorld()->GetTimerManager().SetTimer(TempHandle, [this]()
+		{
+			UpdateProgressUI();
+		}, 0.3f, false);
+	}
 }
 
 void ACookwareActor::Tick(float DeltaTime)
@@ -35,10 +43,13 @@ void ACookwareActor::Tick(float DeltaTime)
 
 	if (bIsCooking)
 	{
-		CookingElapsedTime += DeltaTime;
+		if (HasAuthority())
+		{
+			CookingElapsedTime += DeltaTime;
+		}
 		UpdateProgressUI();
 
-		if (CookingElapsedTime >= CookingDuration)
+		if (HasAuthority() && CookingElapsedTime >= CookingDuration)
 		{
 			FinishCooking();
 		}
@@ -110,6 +121,8 @@ void ACookwareActor::Multicast_UpdateProgress_Implementation()
 void ACookwareActor::UpdateProgressUI()
 {
 	if (!ProgressWidget) return;
+	ProgressWidget->SetVisibility(true); // Reforça que está visível
+	ProgressWidget->SetHiddenInGame(false);
 
 	UUserWidget* Widget = ProgressWidget->GetUserWidgetObject();
 	if (!Widget) return;
@@ -156,5 +169,11 @@ void ACookwareActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ACookwareActor, SharedRecipeProgress);
+	DOREPLIFETIME(ACookwareActor, CookingElapsedTime);
 	DOREPLIFETIME(ACookwareActor, bIsCooking);
+}
+
+void ACookwareActor::OnRep_CookingElapsedTime()
+{
+	UpdateProgressUI();
 }

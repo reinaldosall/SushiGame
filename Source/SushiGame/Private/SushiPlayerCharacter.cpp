@@ -221,8 +221,22 @@ void ASushiPlayerCharacter::ClientUpdateDeliverFeedback_Implementation(const FSt
 		{
 			if (SPC->PlayerStatusWidgetInstance)
 			{
+				//SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(ResultSymbol);
 				SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(ResultSymbol);
 				SPC->PlayerStatusWidgetInstance->UpdateScore(FString::Printf(TEXT("%d"), NewScore));
+
+
+				// Agendar limpeza do feedback após 1s
+				SPC->GetWorldTimerManager().SetTimer(
+					DeliveryFeedbackResetTimer,
+					FTimerDelegate::CreateLambda([=]()
+					{
+						if (SPC->PlayerStatusWidgetInstance)
+						{
+							SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(TEXT(""));
+						}
+					}),
+					1.0f, false);
 			}
 		}
 	}

@@ -62,7 +62,9 @@ void ATableActor::SetFeedbackText(const FString& Text)
 	{
 		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
 		{
-			TextBlock->SetText(FText::FromString(Text));
+			//TextBlock->SetText(FText::FromString(Text));
+			FeedbackVisualText = Text;
+			OnRep_FeedbackVisualText();
 		}
 	}
 
@@ -72,11 +74,27 @@ void ATableActor::SetFeedbackText(const FString& Text)
 
 void ATableActor::ResetFeedbackText()
 {
-	OnRep_OrderName(); // Restaura o nome da receita
+	//OnRep_OrderName(); // Restaura o nome da receita
+	FeedbackVisualText = TEXT("");
+	OnRep_OrderName();
 }
 
 void ATableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATableActor, CurrentOrderName);
+	DOREPLIFETIME(ATableActor, FeedbackVisualText);
+}
+
+void ATableActor::OnRep_FeedbackVisualText()
+{
+	if (!TableOrderWidget) return;
+
+	if (UUserWidget* Widget = TableOrderWidget->GetUserWidgetObject())
+	{
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
+		{
+			TextBlock->SetText(FText::FromString(FeedbackVisualText));
+		}
+	}
 }

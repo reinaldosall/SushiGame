@@ -74,6 +74,8 @@ public:
 	void SetRecipeProgress(int32 NewProgress);
 	
 	void ClearHeldRecipe();
+
+	FTimerHandle DeliveryFeedbackResetTimer;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

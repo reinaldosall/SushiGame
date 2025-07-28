@@ -20,6 +20,14 @@ public:
 	// Interação com o jogador
 	void OnInteract(ASushiPlayerCharacter* Player);
 
+	FTimerHandle CookingTimerHandle;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_CookingElapsedTime)
+	float CookingElapsedTime = 0.f;
+	float CookingDuration = 5.f;
+
+	
+ 
 protected:
 	virtual void BeginPlay() override;
 
@@ -38,10 +46,6 @@ protected:
 	UPROPERTY()
 	ASushiPlayerCharacter* LockedPlayer;
 
-	FTimerHandle CookingTimerHandle;
-	float CookingElapsedTime = 0.f;
-	float CookingDuration = 5.f;
-
 	void StartCooking(ASushiPlayerCharacter* Player);
 	void FinishCooking();
 
@@ -53,6 +57,9 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_UpdateProgress();
+
+	UFUNCTION()
+	void OnRep_CookingElapsedTime();
 
 	void UpdateProgressUI();
 

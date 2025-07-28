@@ -47,6 +47,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Order")
 	int32 TableID = -1;
+
+	UPROPERTY(ReplicatedUsing = OnRep_FeedbackVisualText)
+	FString FeedbackVisualText;
+
+	UFUNCTION()
+	void OnRep_FeedbackVisualText();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
