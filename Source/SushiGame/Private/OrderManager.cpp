@@ -124,12 +124,12 @@ EDeliveryResult AOrderManager::TryCompleteOrder(FName RecipeName, ATableActor* T
 		if (Order.bCompleted)
 			continue;
 
-		if (Order.TargetTable != Table)
+		if (Order.RecipeName != RecipeName)
 			continue;
 
-		if (Order.RecipeName != RecipeName)
-			return EDeliveryResult::WrongRecipe;
-
+		if (Order.TargetTable != Table)
+			return EDeliveryResult::WrongTable;
+		
 		Order.bCompleted = true;
 		Order.TargetTable->ClearFloatingOrderText();
 

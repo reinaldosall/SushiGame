@@ -181,8 +181,11 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 			PS->AddScore(-50);
 		}
 
-		// Feedback visual de erro
 		Table->SetFeedbackText("X");
+		if (ASushiPlayerState* PS = Cast<ASushiPlayerState>(GetPlayerState()))
+		{
+			ClientUpdateDeliverFeedback("X", PS->GetScore());
+		}
 		return;
 	}
 
@@ -200,15 +203,34 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 			{
 			case EDeliveryResult::Success:
 				PS->AddScore(100);
-				Table->SetFeedbackText("✓");
+				Table->SetFeedbackText("CORRECT");
+				ClientUpdateDeliverFeedback("CORRECT", PS->GetScore());
 				HeldRecipe = NAME_None;
 				RecipeProgress = 0;
 				break;
 			case EDeliveryResult::WrongRecipe:
 			case EDeliveryResult::WrongTable:
 				PS->AddScore(-50);
-				Table->SetFeedbackText("X");
+				Table->SetFeedbackText("INCORRECT");
+				ClientUpdateDeliverFeedback("INCORRECT", PS->GetScore());
 				break;
+			}
+		}
+	}
+}
+
+void ASushiPlayerCharacter::ClientUpdateDeliverFeedback_Implementation(const FString& ResultSymbol, int32 NewScore)
+{
+	if (!IsLocallyControlled()) return;
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC))
+		{
+			if (SPC->PlayerStatusWidgetInstance)
+			{
+				SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(ResultSymbol);
+				SPC->PlayerStatusWidgetInstance->UpdateScore(FString::Printf(TEXT("%d"), NewScore));
 			}
 		}
 	}
@@ -237,18 +259,17 @@ void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientAct
 {
 	if (Ingredient)
 	{
-		HeldRecipe = Ingredient->IngredientType;
-		RecipeProgress = 0;
+		RecipeProgress = 0; // primeiro zera o progresso
+		SetHeldRecipe(Ingredient->IngredientType); // depois atualiza HUD com valor correto
 		
 		UE_LOG(LogTemp, Warning, TEXT("Picked up ingredient: %s"), *HeldRecipe.ToString());
 
 		if (IsLocallyControlled())  
 		{
-			UpdatePlayerStatusUI();
+			UpdatePlayerStatusUI(); // opcional aqui, SetHeldRecipe já chama
 		}
 	}
 }
-
 
 bool ASushiPlayerCharacter::ServerPickupIngredient_Validate(AIngredientActor* Ingredient)
 {
@@ -287,7 +308,7 @@ void ASushiPlayerCharacter::UpdatePlayerStatusUI()
 	case 1: StepStr = "Sliced"; break;
 	case 2: StepStr = "Rolled"; break;
 	case 3: StepStr = "Cooking"; break;
-	case 4: StepStr = "Done"; break; // ✅ Destaca que a receita está pronta para entregar
+	case 4: StepStr = "Done"; break; 
 	default: StepStr = "Unknown"; break;
 	}
 
@@ -295,4 +316,29 @@ void ASushiPlayerCharacter::UpdatePlayerStatusUI()
 		*RecipeStr, *StepStr);
 
 	SPC->PlayerStatusWidgetInstance->UpdateStatus(RecipeStr, StepStr);
+	UE_LOG(LogTemp, Warning, TEXT("UpdatePlayerStatusUI → HeldRecipe: %s, Progress: %d"),
+	*HeldRecipe.ToString(), RecipeProgress);
+}
+
+void ASushiPlayerCharacter::SetHeldRecipe(FName NewRecipe)
+{
+	HeldRecipe = NAME_None;  
+	HeldRecipe = NewRecipe;
+
+	ForceNetUpdate();
+
+	if (IsLocallyControlled())
+	{
+		UpdatePlayerStatusUI();
+	}
+}
+
+void ASushiPlayerCharacter::SetRecipeProgress(int32 NewProgress)
+{
+	//RecipeProgress = -1;
+	RecipeProgress = NewProgress;
+	if (IsLocallyControlled())
+	{
+		UpdatePlayerStatusUI();
+	}
 }

@@ -64,5 +64,14 @@ public:
 
 	void UpdatePlayerStatusUI();
 
+	UFUNCTION()
+	void SetHeldRecipe(FName NewRecipe);
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateDeliverFeedback(const FString& ResultSymbol, int32 NewScore);
+
+	UFUNCTION()
+	void SetRecipeProgress(int32 NewProgress);
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

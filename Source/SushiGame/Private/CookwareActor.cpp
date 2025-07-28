@@ -54,7 +54,8 @@ void ACookwareActor::OnInteract(ASushiPlayerCharacter* Player)
 	if (SharedRecipeProgress < 3)
 	{
 		SharedRecipeProgress++;
-		OnRep_RecipeProgress();
+		OnRep_RecipeProgress();	
+		Player->SetRecipeProgress(SharedRecipeProgress);
 	}
 	else if (SharedRecipeProgress == 3)
 	{
@@ -62,7 +63,7 @@ void ACookwareActor::OnInteract(ASushiPlayerCharacter* Player)
 	}
 	else if (SharedRecipeProgress == 4)
 	{
-		// Reset para nova receita
+	 
 		SharedRecipeProgress = 0;
 		OnRep_RecipeProgress();
 	}
@@ -82,8 +83,12 @@ void ACookwareActor::FinishCooking()
 {
 	bIsCooking = false;
 	SharedRecipeProgress = 4; // Estado "Done"
+	if (LockedPlayer)
+	{
+		LockedPlayer->SetRecipeProgress(SharedRecipeProgress);
+	}
 	OnRep_IsCooking();
-	OnRep_RecipeProgress();
+	OnRep_RecipeProgress();	
 	Multicast_UpdateProgress();
 }
 
