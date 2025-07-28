@@ -11,7 +11,7 @@
 #include "EngineUtils.h"
 #include "SushiPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Net/RepLayout.h"
+#include "SushiGameState.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -174,18 +174,14 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 {
 	if (!Table) return;
 
+	ASushiGameState* GS = GetWorld() ? GetWorld()->GetGameState<ASushiGameState>() : nullptr;
+	if (!GS) return;
+
 	if (RecipeProgress < 4)
 	{
-		if (ASushiPlayerState* PS = Cast<ASushiPlayerState>(GetPlayerState()))
-		{
-			PS->AddScore(-50);
-		}
-
+		GS->AddGlobalScore(-50);
 		Table->SetFeedbackText("X");
-		if (ASushiPlayerState* PS = Cast<ASushiPlayerState>(GetPlayerState()))
-		{
-			ClientUpdateDeliverFeedback("X", PS->GetScore());
-		}
+		ClientUpdateDeliverFeedback("X", GS->GetGlobalScore());
 		return;
 	}
 
@@ -197,24 +193,20 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 		UE_LOG(LogTemp, Warning, TEXT("Delivering %s to table %s"), *RecipeName.ToString(), *Table->GetName());
 
 		EDeliveryResult Result = Manager->TryCompleteOrder(RecipeName, Table);
-		if (ASushiPlayerState* PS = Cast<ASushiPlayerState>(GetPlayerState()))
+		switch (Result)
 		{
-			switch (Result)
-			{
-			case EDeliveryResult::Success:
-				PS->AddScore(100);
-				Table->SetFeedbackText("CORRECT");
-				ClientUpdateDeliverFeedback("CORRECT", PS->GetScore());
-				HeldRecipe = NAME_None;
-				RecipeProgress = 0;
-				break;
-			case EDeliveryResult::WrongRecipe:
-			case EDeliveryResult::WrongTable:
-				PS->AddScore(-50);
-				Table->SetFeedbackText("INCORRECT");
-				ClientUpdateDeliverFeedback("INCORRECT", PS->GetScore());
-				break;
-			}
+		case EDeliveryResult::Success:
+			GS->AddGlobalScore(100);
+			Table->SetFeedbackText("CORRECT");
+			ClientUpdateDeliverFeedback("CORRECT", GS->GetGlobalScore());
+			ClearHeldRecipe();
+			break;
+		case EDeliveryResult::WrongRecipe:
+		case EDeliveryResult::WrongTable:
+			GS->AddGlobalScore(-50);
+			Table->SetFeedbackText("INCORRECT");
+			ClientUpdateDeliverFeedback("INCORRECT", GS->GetGlobalScore());
+			break;
 		}
 	}
 }
@@ -340,5 +332,29 @@ void ASushiPlayerCharacter::SetRecipeProgress(int32 NewProgress)
 	if (IsLocallyControlled())
 	{
 		UpdatePlayerStatusUI();
+	}
+}
+
+void ASushiPlayerCharacter::ClearHeldRecipe()
+{
+	HeldRecipe = NAME_None;
+	RecipeProgress = 0;
+
+	ForceNetUpdate();
+
+	if (IsLocallyControlled())
+	{
+		UpdatePlayerStatusUI();
+	}
+	
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC))
+		{
+			if (SPC->PlayerStatusWidgetInstance)
+			{
+				SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(TEXT(""));
+			}
+		}
 	}
 }

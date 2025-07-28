@@ -73,5 +73,7 @@ public:
 	UFUNCTION()
 	void SetRecipeProgress(int32 NewProgress);
 	
+	void ClearHeldRecipe();
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -3,10 +3,11 @@
 #include "SushiPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
-#include "PlayerStatusWidget.h"
+#include "SushiGameState.h"
 
 ASushiGameMode::ASushiGameMode()
 {
+	GameStateClass = ASushiGameState::StaticClass();
 	PlayerStateClass = ASushiPlayerState::StaticClass();
 	PlayerControllerClass = ASushiPlayerController::StaticClass();
 }
