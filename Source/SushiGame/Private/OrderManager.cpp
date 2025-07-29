@@ -87,28 +87,62 @@ void AOrderManager::UpdateHUD()
 
 void AOrderManager::GenerateOrder()
 {
+	// Make sure there are recipes available to draft
 	if (AvailableRecipes.Num() == 0) return;
 
+	// Find all tables on level
 	TArray<AActor*> FoundTables;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATableActor::StaticClass(), FoundTables);
 
 	if (FoundTables.Num() == 0) return;
 
-	ATableActor* TargetTable = Cast<ATableActor>(FoundTables[FMath::RandRange(0, FoundTables.Num() - 1)]);
+	// Filters only tables that do not yet have an active order
+	TArray<ATableActor*> FreeTables;
+	for (AActor* Actor : FoundTables)
+	{
+		if (ATableActor* Table = Cast<ATableActor>(Actor))
+		{
+			bool bHasOrder = false;
+			for (const FOrder& Order : ActiveOrders)
+			{
+				if (!Order.bCompleted && Order.TargetTable == Table)
+				{
+					bHasOrder = true;
+					break;
+				}
+			}
+
+			if (!bHasOrder)
+			{
+				FreeTables.Add(Table);
+			}
+		}
+	}
+
+	// If all tables are busy order is not generated
+	if (FreeTables.Num() == 0) return;
+
+	// Choose a free table and a random recipe
+	ATableActor* TargetTable = FreeTables[FMath::RandRange(0, FreeTables.Num() - 1)];
 	FName ChosenRecipe = AvailableRecipes[FMath::RandRange(0, AvailableRecipes.Num() - 1)];
 
+	// Create new order
 	FOrder NewOrder;
 	NewOrder.RecipeName = ChosenRecipe;
 	NewOrder.TimeRemaining = MaxOrderTime;
 	NewOrder.TargetTable = TargetTable;
 	NewOrder.bCompleted = false;
 
+	// Updates table's floating text with recipe name
 	if (TargetTable)
 	{
 		TargetTable->UpdateFloatingOrderText(ChosenRecipe);
 	}
 
+	// Add the new order to the active list
 	ActiveOrders.Add(NewOrder);
+
+	// Refresh HUD on clients
 	OnRep_ActiveOrders();
 }
 
