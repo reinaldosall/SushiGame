@@ -53,6 +53,11 @@ public:
 
 	UFUNCTION()
 	void OnRep_FeedbackVisualText();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_RefreshOrderName();
+
+	void Multicast_RefreshOrderName_Implementation();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

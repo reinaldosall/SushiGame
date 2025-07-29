@@ -72,11 +72,21 @@ void ATableActor::SetFeedbackText(const FString& Text)
 	GetWorld()->GetTimerManager().SetTimer(FeedbackResetTimer, this, &ATableActor::ResetFeedbackText, 1.0f, false);
 }
 
+// void ATableActor::ResetFeedbackText()
+// {
+// 	//OnRep_OrderName(); // Restaura o nome da receita
+// 	FeedbackVisualText = TEXT("");
+// 	OnRep_OrderName();
+// 	UpdateFloatingOrderText(CurrentOrderName);
+// 	Multicast_RefreshOrderName();
+// }
+
 void ATableActor::ResetFeedbackText()
 {
-	//OnRep_OrderName(); // Restaura o nome da receita
 	FeedbackVisualText = TEXT("");
-	OnRep_OrderName();
+	OnRep_OrderName(); 
+	OnRep_FeedbackVisualText(); // limpa texto nos clientes
+	Multicast_RefreshOrderName(); // reaplica nome da receita
 }
 
 void ATableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -86,6 +96,19 @@ void ATableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(ATableActor, FeedbackVisualText);
 }
 
+// void ATableActor::OnRep_FeedbackVisualText()
+// {
+// 	if (!TableOrderWidget) return;
+//
+// 	if (UUserWidget* Widget = TableOrderWidget->GetUserWidgetObject())
+// 	{
+// 		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
+// 		{
+// 			TextBlock->SetText(FText::FromString(FeedbackVisualText));
+// 		}
+// 	}
+// }
+
 void ATableActor::OnRep_FeedbackVisualText()
 {
 	if (!TableOrderWidget) return;
@@ -94,7 +117,19 @@ void ATableActor::OnRep_FeedbackVisualText()
 	{
 		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
 		{
-			TextBlock->SetText(FText::FromString(FeedbackVisualText));
+			if (!FeedbackVisualText.IsEmpty())
+			{
+				TextBlock->SetText(FText::FromString(FeedbackVisualText));
+			}
+			else
+			{
+				TextBlock->SetText(CurrentOrderName.IsNone() ? FText::FromString(TEXT("-")) : FText::FromName(CurrentOrderName));
+			}
 		}
 	}
+}
+
+void ATableActor::Multicast_RefreshOrderName_Implementation()
+{
+	OnRep_OrderName();
 }
