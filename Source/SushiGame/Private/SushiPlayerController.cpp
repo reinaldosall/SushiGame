@@ -1,50 +1,91 @@
 #include "SushiPlayerController.h"
+
+#include "LobbyWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayerStatusWidget.h"
+#include "SushiGameState.h"
 
 void ASushiPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT(">>> SushiPlayerController::BeginPlay HIT <<<"));
-
 	if (IsLocalController())
 	{
-		UE_LOG(LogTemp, Warning, TEXT(">>> IsLocalController is TRUE <<<"));
-
+		// Create and show player status HUD
 		if (PlayerStatusWidgetClass)
 		{
-			UE_LOG(LogTemp, Warning, TEXT(">>> PlayerStatusWidgetClass is valid: %s"), *PlayerStatusWidgetClass->GetName());
-
 			PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(this, PlayerStatusWidgetClass);
 			if (PlayerStatusWidgetInstance)
 			{
 				PlayerStatusWidgetInstance->AddToViewport(10);
-				UE_LOG(LogTemp, Warning, TEXT(">>> PlayerStatusWidget successfully added to viewport! <<<"));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT(">>> PlayerStatusWidgetInstance is NULL after CreateWidget <<<"));
 			}
 		}
-		else
+
+		// Create lobby widget (but don't add yet)
+		if (LobbyWidgetClass)
 		{
-			UE_LOG(LogTemp, Error, TEXT(">>> PlayerStatusWidgetClass is NULL <<<"));
+			LobbyWidgetInstance = CreateWidget<ULobbyWidget>(this, LobbyWidgetClass);
+		}
+
+		// Handle match state at join
+		if (const ASushiGameState* GS = GetWorld()->GetGameState<ASushiGameState>())
+		{
+			HandleMatchState(GS->GetMatchState());
 		}
 	}
+
 	bShowMouseCursor = false;
 	SetInputMode(FInputModeGameOnly());
 }
+
 ASushiPlayerController::ASushiPlayerController()
 {
-	static ConstructorHelpers::FClassFinder<UPlayerStatusWidget> WidgetClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_PlayerStatus"));
-	if (WidgetClass.Succeeded())
+	// Load status HUD
+	static ConstructorHelpers::FClassFinder<UPlayerStatusWidget> StatusClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_PlayerStatus"));
+	if (StatusClass.Succeeded())
 	{
-		PlayerStatusWidgetClass = WidgetClass.Class;
-		UE_LOG(LogTemp, Warning, TEXT("Set PlayerStatusWidgetClass in constructor"));
+		PlayerStatusWidgetClass = StatusClass.Class;
 	}
-	else
+
+	// Load lobby widget
+	static ConstructorHelpers::FClassFinder<ULobbyWidget> LobbyClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_Lobby"));
+	if (LobbyClass.Succeeded())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to find WBP_PlayerStatus in constructor"));
+		LobbyWidgetClass = LobbyClass.Class;
+	}
+}
+
+void ASushiPlayerController::HandleMatchState(EMatchState NewState)
+{
+	switch (NewState)
+	{
+	case EMatchState::Lobby:
+		ShowLobby();
+		break;
+	case EMatchState::InGame:
+		HideLobby();
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+		break;
+	default:
+		break;
+	}
+}
+
+void ASushiPlayerController::ShowLobby()
+{
+	if (LobbyWidgetInstance && !LobbyWidgetInstance->IsInViewport())
+	{
+		LobbyWidgetInstance->AddToViewport(20);
+		SetInputMode(FInputModeUIOnly());
+		bShowMouseCursor = true;
+	}
+}
+
+void ASushiPlayerController::HideLobby()
+{
+	if (LobbyWidgetInstance)
+	{
+		LobbyWidgetInstance->RemoveFromParent();
 	}
 }

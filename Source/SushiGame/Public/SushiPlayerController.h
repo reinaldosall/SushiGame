@@ -13,8 +13,7 @@ class SUSHIGAME_API ASushiPlayerController : public APlayerController
 
 public:
 	
-	ASushiPlayerController();
-	
+	ASushiPlayerController();	
 	virtual void BeginPlay() override;
 	
 protected:
@@ -25,5 +24,18 @@ public:
 	UPROPERTY()
 	UPlayerStatusWidget* PlayerStatusWidgetInstance;
 
-	FORCEINLINE void SetStatusWidgetClass(TSubclassOf<UPlayerStatusWidget> InClass) { PlayerStatusWidgetClass = InClass; }
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<ULobbyWidget> LobbyWidgetClass;
+
+	UPROPERTY()
+	ULobbyWidget* LobbyWidgetInstance;
+
+	void HandleMatchState(EMatchState NewState);
+	void ShowLobby();
+	void HideLobby();
+
+	FORCEINLINE void SetStatusWidgetClass(TSubclassOf<UPlayerStatusWidget> InClass)
+	{
+		PlayerStatusWidgetClass = InClass;
+	}
 };
