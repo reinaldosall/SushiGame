@@ -1,5 +1,6 @@
 #include "OrderManager.h"
 #include "OrderHUDWidget.h"
+#include "SushiGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
 #include "Net/UnrealNetwork.h"
@@ -33,6 +34,10 @@ void AOrderManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Prevents to generate orders when at lobby
+	ASushiGameState* GS = GetWorld() ? GetWorld()->GetGameState<ASushiGameState>() : nullptr;
+	if (!GS || GS->GetMatchState() != EMatchState::InGame) return;
+	
 	if (HasAuthority())
 	{
 		TimeSinceLastOrder += DeltaTime;
