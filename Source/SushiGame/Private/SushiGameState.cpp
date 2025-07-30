@@ -26,7 +26,7 @@ void ASushiGameState::AddGlobalScore(int32 Amount)
 
 void ASushiGameState::OnRep_GlobalScore()
 {
-	// Update HUD for all local player controllers
+	// Update local HUD for each player
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
@@ -44,14 +44,20 @@ void ASushiGameState::SetMatchState(EMatchState NewState)
 	if (HasAuthority() && MatchState != NewState)
 	{
 		MatchState = NewState;
-		OnRep_MatchState();
+		OnRep_MatchState(); // local update for server
 	}
 }
 
 void ASushiGameState::OnRep_MatchState()
 {
-	// You can show/hide UI based on MatchState here
-	// For example, display victory/defeat widgets
+	// Notify each player controller to handle state change
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
+		{
+			PC->HandleMatchState(MatchState);
+		}
+	}
 }
 
 void ASushiGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

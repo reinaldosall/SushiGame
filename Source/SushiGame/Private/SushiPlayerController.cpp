@@ -1,57 +1,50 @@
 #include "SushiPlayerController.h"
-
 #include "LobbyWidget.h"
-#include "Blueprint/UserWidget.h"
 #include "PlayerStatusWidget.h"
 #include "SushiGameState.h"
-
-void ASushiPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (IsLocalController())
-	{
-		// Create and show player status HUD
-		if (PlayerStatusWidgetClass)
-		{
-			PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(this, PlayerStatusWidgetClass);
-			if (PlayerStatusWidgetInstance)
-			{
-				PlayerStatusWidgetInstance->AddToViewport(10);
-			}
-		}
-
-		// Create lobby widget (but don't add yet)
-		if (LobbyWidgetClass)
-		{
-			LobbyWidgetInstance = CreateWidget<ULobbyWidget>(this, LobbyWidgetClass);
-		}
-
-		// Handle match state at join
-		if (const ASushiGameState* GS = GetWorld()->GetGameState<ASushiGameState>())
-		{
-			HandleMatchState(GS->GetMatchState());
-		}
-	}
-
-	bShowMouseCursor = false;
-	SetInputMode(FInputModeGameOnly());
-}
+#include "Blueprint/UserWidget.h"
 
 ASushiPlayerController::ASushiPlayerController()
 {
-	// Load status HUD
 	static ConstructorHelpers::FClassFinder<UPlayerStatusWidget> StatusClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_PlayerStatus"));
 	if (StatusClass.Succeeded())
 	{
 		PlayerStatusWidgetClass = StatusClass.Class;
 	}
 
-	// Load lobby widget
 	static ConstructorHelpers::FClassFinder<ULobbyWidget> LobbyClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_Lobby"));
 	if (LobbyClass.Succeeded())
 	{
 		LobbyWidgetClass = LobbyClass.Class;
+	}
+}
+
+void ASushiPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!IsLocalController()) return;
+
+	// Create and show status HUD
+	if (PlayerStatusWidgetClass)
+	{
+		PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(this, PlayerStatusWidgetClass);
+		if (PlayerStatusWidgetInstance)
+		{
+			PlayerStatusWidgetInstance->AddToViewport(10);
+		}
+	}
+
+	// Create lobby widget
+	if (LobbyWidgetClass)
+	{
+		LobbyWidgetInstance = CreateWidget<ULobbyWidget>(this, LobbyWidgetClass);
+	}
+
+	// Sync current match state
+	if (const ASushiGameState* GS = GetWorld()->GetGameState<ASushiGameState>())
+	{
+		HandleMatchState(GS->GetMatchState());
 	}
 }
 
@@ -62,12 +55,16 @@ void ASushiPlayerController::HandleMatchState(EMatchState NewState)
 	case EMatchState::Lobby:
 		ShowLobby();
 		break;
+
 	case EMatchState::InGame:
 		HideLobby();
 		SetInputMode(FInputModeGameOnly());
 		bShowMouseCursor = false;
 		break;
-	default:
+
+	case EMatchState::Victory:
+	case EMatchState::Defeat:
+		// Future: show end screen
 		break;
 	}
 }

@@ -8,7 +8,11 @@
 void ULobbyWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	Setup();
+
+	if (StartButton)
+	{
+		StartButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleStartClicked);
+	}
 }
 
 void ULobbyWidget::Setup()
@@ -17,7 +21,7 @@ void ULobbyWidget::Setup()
 	{
 		StartButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleStartClicked);
 	}
-}
+} 
 
 void ULobbyWidget::HandleStartClicked()
 {
@@ -26,7 +30,7 @@ void ULobbyWidget::HandleStartClicked()
 	{
 		if (PC->HasAuthority())
 		{
-			if (ASushiGameState* GS = GetWorld()->GetGameState<ASushiGameState>())
+			if (ASushiGameState* GS = Cast<ASushiGameState>(GetWorld()->GetGameState()))
 			{
 				GS->SetMatchState(EMatchState::InGame);
 			}
