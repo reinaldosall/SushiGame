@@ -22,21 +22,41 @@ public:
 	void OnMatchStateChanged(EMatchState NewState);
 
 protected:
+	// UI Bindings
 	virtual void NativeConstruct() override;
 
 	// Start button widget
 	UPROPERTY(meta = (BindWidget))
-	UButton* StartButton;
+	UButton* HostButton;
 
-	// Optional: Title text
+	UPROPERTY(meta = (BindWidget))
+	UButton* JoinButton;
+	
+	// Custom Title text
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* LobbyTitleText;
 
-	// Optional: Text inside the button
 	UPROPERTY(meta = (BindWidgetOptional))
-	UTextBlock* StartButtonText;
+	UTextBlock* HostButtonText;
 
+	UPROPERTY(meta = (BindWidgetOptional))
+	UTextBlock* JoinButtonText;
+	
 	// Called when Start button is clicked
+	// UFUNCTION()
+	// void HandleStartClicked();
+
+	// Host game
 	UFUNCTION()
-	void HandleStartClicked();
+	void HandleHostClicked();
+
+	// Join game
+	UFUNCTION()
+	void HandleJoinClicked();
+
+	// UFUNCTION()
+	// void HostGame();
+	//
+	// UFUNCTION()
+	// void JoinGame();
 };

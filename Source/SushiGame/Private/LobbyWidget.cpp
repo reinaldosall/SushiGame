@@ -5,38 +5,64 @@
 #include "SushiGameState.h"
 #include "GameFramework/PlayerController.h"
 
+
 void ULobbyWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	if (StartButton)
-	{
-		StartButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleStartClicked);
-	}
+	Setup();
 }
+
 
 void ULobbyWidget::Setup()
 {
-	if (StartButton)
+	if (HostButton)
 	{
-		StartButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleStartClicked);
+		HostButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleHostClicked);
 	}
-} 
 
-void ULobbyWidget::HandleStartClicked()
-{
-	// Only the server (host) can change match state
-	if (APlayerController* PC = GetOwningPlayer())
+	if (JoinButton)
 	{
-		if (PC->HasAuthority())
-		{
-			if (ASushiGameState* GS = Cast<ASushiGameState>(GetWorld()->GetGameState()))
-			{
-				GS->SetMatchState(EMatchState::InGame);
-			}
-		}
+		JoinButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleJoinClicked);
 	}
 }
+
+void ULobbyWidget::HandleHostClicked()
+{
+	// Starts the game as listen server
+	//UGameplayStatics::OpenLevel(GetWorld(), FName("Lvl_Restaurant"), true, "listen");
+	
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		UGameplayStatics::OpenLevel(PC, "Lvl_Restaurant", true, "listen");
+	}
+}
+
+void ULobbyWidget::HandleJoinClicked()
+{
+	// Joins the local host (for testing  127.0.0.1)
+	//UGameplayStatics::OpenLevel(GetWorld(), FName("127.0.0.1"));
+	
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		PC->ClientTravel("127.0.0.1", TRAVEL_Absolute);
+	}
+}
+
+// void ULobbyWidget::HostGame()
+// {
+// 	if (APlayerController* PC = GetOwningPlayer())
+// 	{
+// 		PC->ConsoleCommand("open Lvl_Restaurant?listen");
+// 	}
+// }
+//
+// void ULobbyWidget::JoinGame()
+// {
+// 	if (APlayerController* PC = GetOwningPlayer())
+// 	{
+// 		PC->ConsoleCommand("open 127.0.0.1");
+// 	}
+// }
 
 void ULobbyWidget::OnMatchStateChanged(EMatchState NewState)
 {
