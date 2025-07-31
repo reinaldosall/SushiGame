@@ -15,18 +15,16 @@ class SUSHIGAME_API ACookwareActor : public AActor
 
 public:
 	ACookwareActor();
+	
 	virtual void Tick(float DeltaTime) override;
-
-	// Interação com o jogador
+	
 	void OnInteract(ASushiPlayerCharacter* Player);
-
+	
 	FTimerHandle CookingTimerHandle;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_CookingElapsedTime)
 	float CookingElapsedTime = 0.f;
-	float CookingDuration = 5.f;
-
-	
+	float CookingDuration = 5.f;	
  
 protected:
 	virtual void BeginPlay() override;

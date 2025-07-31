@@ -13,7 +13,6 @@ public:
 	ASushiPlayerState();
 
 protected:
-	/** Atualiza HUD localmente quando o Score for replicado */
 	UFUNCTION()
 	void OnRep_PlayerScore();
 
@@ -23,7 +22,6 @@ public:
 
 	void AddScore(int32 Amount);
 
-	/** Override correto da função GetScore() da classe base */
 	virtual int32 GetScore() const;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

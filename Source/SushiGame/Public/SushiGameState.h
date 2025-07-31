@@ -55,7 +55,7 @@ protected:
 	UFUNCTION()
 	void OnRep_MatchState();
 
-	// Checks if game should end
+	// Checks if game should end (win/lose condition)
 	void CheckEndGameCondition();
 	
 	// Handles replication of properties 

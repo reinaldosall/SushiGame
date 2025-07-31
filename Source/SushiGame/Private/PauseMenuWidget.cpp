@@ -25,12 +25,12 @@ void UPauseMenuWidget::OnReturnToLobbyClicked()
 	{
 		if (PC->HasAuthority())
 		{
-			// Host: reinicia o lobby
+			// Host: only one who restarts lobby
 			UGameplayStatics::OpenLevel(PC, "Lvl_Lobby", true, "listen");
 		}
 		else
 		{
-			// Guest: opcional — apenas mensagem ou travar botão
+			// Guest: shows only text
 			if (UTextBlock* Status = Cast<UTextBlock>(GetWidgetFromName(TEXT("StatusText"))))
 			{
 				Status->SetText(FText::FromString("Waiting for host to restart..."));

@@ -62,31 +62,21 @@ void ATableActor::SetFeedbackText(const FString& Text)
 	{
 		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
 		{
-			//TextBlock->SetText(FText::FromString(Text));
 			FeedbackVisualText = Text;
 			OnRep_FeedbackVisualText();
 		}
 	}
 
-	// Limpa depois de 1 segundo
+	// clean after 1sec
 	GetWorld()->GetTimerManager().SetTimer(FeedbackResetTimer, this, &ATableActor::ResetFeedbackText, 1.0f, false);
 }
-
-// void ATableActor::ResetFeedbackText()
-// {
-// 	//OnRep_OrderName(); // Restaura o nome da receita
-// 	FeedbackVisualText = TEXT("");
-// 	OnRep_OrderName();
-// 	UpdateFloatingOrderText(CurrentOrderName);
-// 	Multicast_RefreshOrderName();
-// }
 
 void ATableActor::ResetFeedbackText()
 {
 	FeedbackVisualText = TEXT("");
 	OnRep_OrderName(); 
-	OnRep_FeedbackVisualText(); // limpa texto nos clientes
-	Multicast_RefreshOrderName(); // reaplica nome da receita
+	OnRep_FeedbackVisualText(); // Clean text on guests 
+	Multicast_RefreshOrderName(); // Refresh recipe name
 }
 
 void ATableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -95,19 +85,6 @@ void ATableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(ATableActor, CurrentOrderName);
 	DOREPLIFETIME(ATableActor, FeedbackVisualText);
 }
-
-// void ATableActor::OnRep_FeedbackVisualText()
-// {
-// 	if (!TableOrderWidget) return;
-//
-// 	if (UUserWidget* Widget = TableOrderWidget->GetUserWidgetObject())
-// 	{
-// 		if (UTextBlock* TextBlock = Cast<UTextBlock>(Widget->GetWidgetFromName("OrderText")))
-// 		{
-// 			TextBlock->SetText(FText::FromString(FeedbackVisualText));
-// 		}
-// 	}
-// }
 
 void ATableActor::OnRep_FeedbackVisualText()
 {

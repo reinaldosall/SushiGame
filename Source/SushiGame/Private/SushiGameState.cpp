@@ -61,9 +61,7 @@ void ASushiGameState::OnRep_MatchState()
 			}
 		}
 	}
-}
-
-void ASushiGameState::CheckEndGameCondition()
+}void ASushiGameState::CheckEndGameCondition()
 {
 	const int32 WinScore = 500;
 	const int32 LoseScore = -200;

@@ -29,7 +29,7 @@ public:
 	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ingredient")
-	FName IngredientType; // Ex: SushiRoll, Peixe, Carne etc
+	FName IngredientType;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IngredientState)
 	EIngredientState IngredientState;

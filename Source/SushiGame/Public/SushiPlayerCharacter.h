@@ -30,10 +30,7 @@ protected:
 	// Interaction
 	void Interact();
 	void DeliverDish();
-
-	// UFUNCTION(Server, Reliable, WithValidation)
-	// void ServerInteractWith(ACookwareActor* Cookware, AIngredientActor* Ingredient);
-
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerDeliverDish(FName RecipeName, ATableActor* Table);
 
@@ -44,7 +41,6 @@ protected:
 	class UCameraComponent* FollowCamera;
 
 public:
-
 	UFUNCTION()
 	void OnRep_HeldRecipe();
 

@@ -101,26 +101,18 @@ void ASushiPlayerCharacter::Interact()
 	FHitResult Hit;
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
 	{
-		// Se acertar um ingrediente
+		// when hits ingredient
 		if (AIngredientActor* Ingredient = Cast<AIngredientActor>(Hit.GetActor()))
 		{
 			ServerPickupIngredient(Ingredient);
 			return;
 		}
 
-		// Se acertar uma cookware
+		// when hits cookware
 		if (ACookwareActor* Cookware = Cast<ACookwareActor>(Hit.GetActor()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Cookware hit: %s"), *Cookware->GetName());
-
-			// if (!HeldRecipe.IsNone())
-			// {
-			// 	ServerInteractWith(Cookware);
-			// }
-			// Dentro do LineTrace de hit:
-						
+			UE_LOG(LogTemp, Warning, TEXT("Cookware hit: %s"), *Cookware->GetName());	
 			ServerInteractWith(Cookware);
-
 		}
 	}
 }
@@ -136,14 +128,12 @@ void ASushiPlayerCharacter::ServerInteractWith_Implementation(ACookwareActor* Co
 	{
 		Cookware->OnInteract(this);
 	}
-	//Cookware->OnInteract(this); // Passa a si mesmo
 }
 
 bool ASushiPlayerCharacter::ServerInteractWith_Validate(ACookwareActor* Cookware)
 {
 	return true;
 }
-
 
 void ASushiPlayerCharacter::DeliverDish()
 {
@@ -220,13 +210,11 @@ void ASushiPlayerCharacter::ClientUpdateDeliverFeedback_Implementation(const FSt
 		if (ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC))
 		{
 			if (SPC->PlayerStatusWidgetInstance)
-			{
-				//SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(ResultSymbol);
+			{				
 				SPC->PlayerStatusWidgetInstance->UpdateDeliveryStatus(ResultSymbol);
 				SPC->PlayerStatusWidgetInstance->UpdateScore(FString::Printf(TEXT("%d"), NewScore));
 
-
-				// Agendar limpeza do feedback após 1s
+				// Schedule feedback clean after 1s
 				SPC->GetWorldTimerManager().SetTimer(
 					DeliveryFeedbackResetTimer,
 					FTimerDelegate::CreateLambda([=]()
@@ -249,30 +237,23 @@ bool ASushiPlayerCharacter::ServerDeliverDish_Validate(FName RecipeName, ATableA
 
 void ASushiPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//DOREPLIFETIME(ASushiPlayerCharacter, HeldRecipe);
-	//DOREPLIFETIME(ASushiPlayerCharacter, RecipeProgress);
-	//DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, HeldRecipe, COND_OwnerOnly, REPNOTIFY_Always);
-	//DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, RecipeProgress, COND_OwnerOnly, REPNOTIFY_Always);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
 	DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, HeldRecipe, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASushiPlayerCharacter, RecipeProgress, COND_None, REPNOTIFY_Always);
-
-
-
 }
 
 void ASushiPlayerCharacter::ServerPickupIngredient_Implementation(AIngredientActor* Ingredient)
 {
 	if (Ingredient)
 	{
-		RecipeProgress = 0; // primeiro zera o progresso
-		SetHeldRecipe(Ingredient->IngredientType); // depois atualiza HUD com valor correto
+		RecipeProgress = 0; // clean progress
+		SetHeldRecipe(Ingredient->IngredientType); // update hud with correct recipe
 		
 		UE_LOG(LogTemp, Warning, TEXT("Picked up ingredient: %s"), *HeldRecipe.ToString());
 
 		if (IsLocallyControlled())  
 		{
-			UpdatePlayerStatusUI(); // opcional aqui, SetHeldRecipe já chama
+			UpdatePlayerStatusUI();
 		}
 	}
 }

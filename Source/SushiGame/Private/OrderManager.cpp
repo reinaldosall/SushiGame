@@ -3,6 +3,7 @@
 #include "SushiGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
+#include "Components/BillboardComponent.h"
 #include "Net/UnrealNetwork.h"
 
 AOrderManager::AOrderManager()

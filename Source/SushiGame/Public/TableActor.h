@@ -15,49 +15,58 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// Componente raiz
+	// Root scene component
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
 
-	// Mesh da mesa
+	// Static mesh representing the table
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* TableMesh;
 
-	// Widget flutuante com o nome da ordem
+	// Widget component showing the current order
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TableOrderWidget;
 
-	// Nome da receita esperada
+	// Current order name expected at this table
 	UPROPERTY(ReplicatedUsing = OnRep_OrderName)
 	FName CurrentOrderName;
 
 	UFUNCTION()
 	void OnRep_OrderName();
 
-	// Feedback visual de acerto/erro
+	// Timer to reset feedback text after a short delay
 	FTimerHandle FeedbackResetTimer;
 
-public:	
-	// Atualiza o nome da ordem
+public:
+	// Updates the floating text with the order name
 	void UpdateFloatingOrderText(const FName& OrderName);
+
+	// Clears the order name from the widget
 	void ClearFloatingOrderText();
 
+	// Shows a short feedback message ("CORRECT", "X", etc.)
 	void SetFeedbackText(const FString& Text);
+
+	// Resets the feedback text after delay
 	void ResetFeedbackText();
 
+	// Table ID used to identify it in the game
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Order")
 	int32 TableID = -1;
 
+	// Feedback text shown temporarily over the table
 	UPROPERTY(ReplicatedUsing = OnRep_FeedbackVisualText)
 	FString FeedbackVisualText;
 
 	UFUNCTION()
 	void OnRep_FeedbackVisualText();
 
+	// Ensures all clients refresh the widget text
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_RefreshOrderName();
 
 	void Multicast_RefreshOrderName_Implementation();
-	
+
+	// Replication setup
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

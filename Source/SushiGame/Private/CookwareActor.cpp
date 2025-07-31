@@ -93,7 +93,7 @@ void ACookwareActor::StartCooking(ASushiPlayerCharacter* Player)
 void ACookwareActor::FinishCooking()
 {
 	bIsCooking = false;
-	SharedRecipeProgress = 4; // Estado "Done"
+	SharedRecipeProgress = 4; //"Done"
 	if (LockedPlayer)
 	{
 		LockedPlayer->SetRecipeProgress(SharedRecipeProgress);
@@ -121,7 +121,7 @@ void ACookwareActor::Multicast_UpdateProgress_Implementation()
 void ACookwareActor::UpdateProgressUI()
 {
 	if (!ProgressWidget) return;
-	ProgressWidget->SetVisibility(true); // Reforça que está visível
+	ProgressWidget->SetVisibility(true);
 	ProgressWidget->SetHiddenInGame(false);
 
 	UUserWidget* Widget = ProgressWidget->GetUserWidgetObject();
