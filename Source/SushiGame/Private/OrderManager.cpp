@@ -17,6 +17,7 @@ AOrderManager::AOrderManager()
 }
 
 void AOrderManager::BeginPlay()
+
 {
 	Super::BeginPlay();
 
