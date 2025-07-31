@@ -37,8 +37,14 @@ public:
 	void ShowLobby();
 	void HideLobby();
 
-	// FORCEINLINE void SetStatusWidgetClass(TSubclassOf<UPlayerStatusWidget> InClass)
-	// {
-	// 	PlayerStatusWidgetClass = InClass;
-	// }
+	// Victory/Defeat UI
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> VictoryWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> DefeatWidgetClass;
+
+	// UI instances
+	UUserWidget* VictoryWidgetInstance = nullptr;
+	UUserWidget* DefeatWidgetInstance = nullptr;
 };

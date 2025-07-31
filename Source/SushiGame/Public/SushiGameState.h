@@ -55,6 +55,9 @@ protected:
 	UFUNCTION()
 	void OnRep_MatchState();
 
+	// Checks if game should end
+	void CheckEndGameCondition();
+	
 	// Handles replication of properties 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -17,6 +17,18 @@ ASushiPlayerController::ASushiPlayerController()
 	{
 		LobbyWidgetClass = LobbyClass.Class;
 	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> VictoryClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_Victory"));
+	if (VictoryClass.Succeeded())
+	{
+		VictoryWidgetClass = VictoryClass.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> DefeatClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_Defeat"));
+	if (DefeatClass.Succeeded())
+	{
+		DefeatWidgetClass = DefeatClass.Class;
+	}
 }
 
 void ASushiPlayerController::BeginPlay()
@@ -72,8 +84,45 @@ void ASushiPlayerController::HandleMatchState(EMatchState NewState)
 		break;
 
 	case EMatchState::Victory:
+		// Hide gameplay HUD
+		if (PlayerStatusWidgetInstance)
+		{
+			PlayerStatusWidgetInstance->RemoveFromParent();
+			PlayerStatusWidgetInstance = nullptr;
+		}
+
+		// Show Victory screen
+		if (VictoryWidgetClass && !VictoryWidgetInstance)
+		{
+			VictoryWidgetInstance = CreateWidget<UUserWidget>(this, VictoryWidgetClass);
+			if (VictoryWidgetInstance)
+			{
+				VictoryWidgetInstance->AddToViewport(100);
+				SetInputMode(FInputModeUIOnly());
+				bShowMouseCursor = true;
+			}
+		}
+		break;
+		
 	case EMatchState::Defeat:
-		// Future: show end screen
+		// Hide gameplay HUD
+		if (PlayerStatusWidgetInstance)
+		{
+			PlayerStatusWidgetInstance->RemoveFromParent();
+			PlayerStatusWidgetInstance = nullptr;
+		}
+
+		// Show Defeat screen
+		if (DefeatWidgetClass && !DefeatWidgetInstance)
+		{
+			DefeatWidgetInstance = CreateWidget<UUserWidget>(this, DefeatWidgetClass);
+			if (DefeatWidgetInstance)
+			{
+				DefeatWidgetInstance->AddToViewport(100);
+				SetInputMode(FInputModeUIOnly());
+				bShowMouseCursor = true;
+			}
+		}
 		break;
 	}
 }

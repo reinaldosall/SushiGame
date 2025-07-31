@@ -17,16 +17,17 @@ int32 ASushiGameState::GetGlobalScore() const
 
 void ASushiGameState::AddGlobalScore(int32 Amount)
 {
-	if (HasAuthority())
-	{
-		GlobalScore += Amount;
-		OnRep_GlobalScore();
-	}
+	if (!HasAuthority()) return;
+
+	GlobalScore += Amount;
+	OnRep_GlobalScore();
+
+	CheckEndGameCondition();
 }
 
 void ASushiGameState::OnRep_GlobalScore()
 {
-	// Update local HUD for each player
+	// Updates HUD for local players
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
@@ -41,16 +42,15 @@ void ASushiGameState::OnRep_GlobalScore()
 
 void ASushiGameState::SetMatchState(EMatchState NewState)
 {
-	if (HasAuthority() && MatchState != NewState)
-	{
-		MatchState = NewState;
-		OnRep_MatchState(); // local update for server
-	}
+	if (!HasAuthority() || MatchState == NewState) return;
+
+	MatchState = NewState;
+	OnRep_MatchState(); // Local update for server
 }
 
 void ASushiGameState::OnRep_MatchState()
 {
-	// Notify only local player controllers
+	// Notifies local controllers
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
@@ -60,6 +60,23 @@ void ASushiGameState::OnRep_MatchState()
 				PC->HandleMatchState(MatchState);
 			}
 		}
+	}
+}
+
+void ASushiGameState::CheckEndGameCondition()
+{
+	const int32 WinScore = 500;
+	const int32 LoseScore = -200;
+
+	if (MatchState != EMatchState::InGame) return;
+
+	if (GlobalScore >= WinScore)
+	{
+		SetMatchState(EMatchState::Victory);
+	}
+	else if (GlobalScore <= LoseScore)
+	{
+		SetMatchState(EMatchState::Defeat);
 	}
 }
 
