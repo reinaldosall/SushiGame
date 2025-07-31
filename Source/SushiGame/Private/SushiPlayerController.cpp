@@ -23,25 +23,22 @@ void ASushiPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!IsLocalController()) return;
-
-	// Create and show status HUD
-	if (PlayerStatusWidgetClass)
+	if (IsLocalController())
 	{
-		PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(this, PlayerStatusWidgetClass);
-		if (PlayerStatusWidgetInstance)
+		// Show lobby HUD
+		if (LobbyWidgetClass)
 		{
-			PlayerStatusWidgetInstance->AddToViewport(10);
+			LobbyWidgetInstance = CreateWidget<ULobbyWidget>(this, LobbyWidgetClass);
+			if (LobbyWidgetInstance)
+			{
+				LobbyWidgetInstance->AddToViewport(50);
+				SetInputMode(FInputModeUIOnly());
+				bShowMouseCursor = true;
+			}
 		}
 	}
 
-	// Create lobby widget
-	if (LobbyWidgetClass)
-	{
-		LobbyWidgetInstance = CreateWidget<ULobbyWidget>(this, LobbyWidgetClass);
-	}
-
-	// Sync current match state
+	// Sync current match state (in case of late join)
 	if (const ASushiGameState* GS = GetWorld()->GetGameState<ASushiGameState>())
 	{
 		HandleMatchState(GS->GetMatchState());
@@ -54,12 +51,24 @@ void ASushiPlayerController::HandleMatchState(EMatchState NewState)
 	{
 	case EMatchState::Lobby:
 		ShowLobby();
+		SetInputMode(FInputModeUIOnly());
+		bShowMouseCursor = true;
 		break;
 
 	case EMatchState::InGame:
 		HideLobby();
 		SetInputMode(FInputModeGameOnly());
 		bShowMouseCursor = false;
+
+		// Show player HUD only when game starts
+		if (!PlayerStatusWidgetInstance && PlayerStatusWidgetClass && IsLocalController())
+		{
+			PlayerStatusWidgetInstance = CreateWidget<UPlayerStatusWidget>(this, PlayerStatusWidgetClass);
+			if (PlayerStatusWidgetInstance)
+			{
+				PlayerStatusWidgetInstance->AddToViewport(10);
+			}
+		}
 		break;
 
 	case EMatchState::Victory:

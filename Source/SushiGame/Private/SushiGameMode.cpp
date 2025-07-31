@@ -1,42 +1,47 @@
 #include "SushiGameMode.h"
 #include "SushiPlayerController.h"
 #include "SushiPlayerState.h"
-#include "Kismet/GameplayStatics.h"
-#include "UObject/ConstructorHelpers.h"
 #include "SushiGameState.h"
+#include "UObject/ConstructorHelpers.h"
 
 ASushiGameMode::ASushiGameMode()
 {
 	GameStateClass = ASushiGameState::StaticClass();
 	PlayerStateClass = ASushiPlayerState::StaticClass();
 	PlayerControllerClass = ASushiPlayerController::StaticClass();
+
+	// Set default pawn from Blueprint
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
+	if (PlayerPawnBPClass.Class)
+	{
+		DefaultPawnClass = PlayerPawnBPClass.Class;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Could not find BP_SushiGameCharacter"));
+	}
 }
 
 void ASushiGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PC || PC->GetPawn()) return;
-
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
-	if (PlayerPawnBPClass.Class != nullptr)
+	// Only host sets match state
+	if (HasAuthority())
 	{
-		FVector SpawnLocation = FVector(0, 0, 200);
-		FRotator SpawnRotation = FRotator::ZeroRotator;
-
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		APawn* NewPawn = GetWorld()->SpawnActor<APawn>(PlayerPawnBPClass.Class, SpawnLocation, SpawnRotation, Params);
-		if (NewPawn)
+		if (ASushiGameState* GS = GetGameState<ASushiGameState>())
 		{
-			PC->Possess(NewPawn);
-			UE_LOG(LogTemp, Warning, TEXT("Spawned and possessed BP_SushiGameCharacter: %s"), *NewPawn->GetName());
+			FString MapName = GetWorld()->GetMapName();
+			MapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+
+			if (MapName == "Lvl_Restaurant")
+			{
+				GS->SetMatchState(EMatchState::InGame);
+			}
+			else
+			{
+				GS->SetMatchState(EMatchState::Lobby);
+			}
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("BP_SushiGameCharacter not found! Check path."));
 	}
 }

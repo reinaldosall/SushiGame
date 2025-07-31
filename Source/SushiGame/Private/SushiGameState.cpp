@@ -50,12 +50,15 @@ void ASushiGameState::SetMatchState(EMatchState NewState)
 
 void ASushiGameState::OnRep_MatchState()
 {
-	// Notify each player controller to handle state change
+	// Notify only local player controllers
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
 		{
-			PC->HandleMatchState(MatchState);
+			if (PC->IsLocalController())
+			{
+				PC->HandleMatchState(MatchState);
+			}
 		}
 	}
 }

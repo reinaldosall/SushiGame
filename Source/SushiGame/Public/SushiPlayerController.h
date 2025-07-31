@@ -37,8 +37,8 @@ public:
 	void ShowLobby();
 	void HideLobby();
 
-	FORCEINLINE void SetStatusWidgetClass(TSubclassOf<UPlayerStatusWidget> InClass)
-	{
-		PlayerStatusWidgetClass = InClass;
-	}
+	// FORCEINLINE void SetStatusWidgetClass(TSubclassOf<UPlayerStatusWidget> InClass)
+	// {
+	// 	PlayerStatusWidgetClass = InClass;
+	// }
 };
