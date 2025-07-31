@@ -130,7 +130,7 @@ void ACookwareActor::UpdateProgressUI()
 	UTextBlock* Text = Cast<UTextBlock>(Widget->GetWidgetFromName(TEXT("ProgressText")));
 	UProgressBar* Bar = Cast<UProgressBar>(Widget->GetWidgetFromName(TEXT("ProgressBar")));
 
-	FString Status = TEXT("Idle");
+	FString Status = TEXT("Waiting Recipe");
 
 	if (bIsCooking)
 	{
@@ -143,7 +143,7 @@ void ACookwareActor::UpdateProgressUI()
 	}
 	else if (SharedRecipeProgress == 4)
 	{
-		Status = TEXT("Done");
+		Status = TEXT("Take Cooked");
 		if (Bar) Bar->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else

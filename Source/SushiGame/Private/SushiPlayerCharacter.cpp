@@ -180,8 +180,8 @@ void ASushiPlayerCharacter::ServerDeliverDish_Implementation(FName RecipeName, A
 	if (RecipeProgress < 4)
 	{
 		GS->AddGlobalScore(-50);
-		Table->SetFeedbackText("X");
-		ClientUpdateDeliverFeedback("X", GS->GetGlobalScore());
+		Table->SetFeedbackText("INCOMPLETE");
+		ClientUpdateDeliverFeedback("INCOMPLETE", GS->GetGlobalScore());
 		return;
 	}
 
@@ -305,16 +305,16 @@ void ASushiPlayerCharacter::UpdatePlayerStatusUI()
 	ASushiPlayerController* SPC = Cast<ASushiPlayerController>(PC);
 	if (!SPC || !SPC->PlayerStatusWidgetInstance) return;
 
-	FString RecipeStr = HeldRecipe.IsNone() ? TEXT("None") : HeldRecipe.ToString();
+	FString RecipeStr = HeldRecipe.IsNone() ? TEXT("Empty") : HeldRecipe.ToString();
 	FString StepStr = TEXT("Unknown");
 
 	switch (RecipeProgress)
 	{
-	case 0: StepStr = "None"; break;
+	case 0: StepStr = "Raw"; break;
 	case 1: StepStr = "Sliced"; break;
 	case 2: StepStr = "Rolled"; break;
 	case 3: StepStr = "Cooking"; break;
-	case 4: StepStr = "Done"; break; 
+	case 4: StepStr = "Deliver to Table"; break; 
 	default: StepStr = "Unknown"; break;
 	}
 
