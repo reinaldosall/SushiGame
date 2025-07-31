@@ -1,0 +1,61 @@
+#include "EndGameWidget.h"
+
+#include "SushiGameState.h"
+#include "Components/Button.h"
+#include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+
+void UEndGameWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if (RestartButton)
+	{
+		RestartButton->OnClicked.AddDynamic(this, &UEndGameWidget::OnRestartClicked);
+
+		// Hide restart button if not the host
+		if (!GetOwningPlayer() || !GetOwningPlayer()->HasAuthority())
+		{
+			RestartButton->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	if (ResultText)
+	{
+		FString StateStr = "GAME OVER";
+
+		if (const ASushiGameState* GS = GetWorld() ? GetWorld()->GetGameState<ASushiGameState>() : nullptr)
+		{
+			bool bIsHost = GetOwningPlayer() && GetOwningPlayer()->HasAuthority();
+
+			switch (GS->GetMatchState())
+			{
+			case EMatchState::Victory:
+				StateStr = bIsHost ? "YOU WIN!" : "YOU WIN! WAITING FOR HOST TO RESTART...";
+				break;
+
+			case EMatchState::Defeat:
+				StateStr = bIsHost ? "YOU LOSE!" : "YOU LOSE! WAITING FOR HOST TO RESTART...";
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		ResultText->SetText(FText::FromString(StateStr));
+	}
+}
+
+void UEndGameWidget::OnRestartClicked()
+{
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		if (PC->HasAuthority())
+		{
+			// Only the host restarts the match
+			UGameplayStatics::OpenLevel(PC, "Lvl_Lobby", true, "listen");
+		}
+	}
+}
