@@ -1,9 +1,9 @@
 #include "EndGameWidget.h"
-
 #include "SushiGameState.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/PlayerController.h"
 
 void UEndGameWidget::NativeConstruct()
@@ -19,6 +19,11 @@ void UEndGameWidget::NativeConstruct()
 		{
 			RestartButton->SetVisibility(ESlateVisibility::Collapsed);
 		}
+	}
+
+	if (QuitButton)
+	{
+		QuitButton->OnClicked.AddDynamic(this, &UEndGameWidget::OnQuitClicked);
 	}
 
 	if (ResultText)
@@ -57,5 +62,13 @@ void UEndGameWidget::OnRestartClicked()
 			// Only the host restarts the match
 			UGameplayStatics::OpenLevel(PC, "Lvl_Lobby", true, "listen");
 		}
+	}
+}
+
+void UEndGameWidget::OnQuitClicked()
+{
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
 	}
 }

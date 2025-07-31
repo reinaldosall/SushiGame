@@ -17,8 +17,14 @@ protected:
 	class UButton* RestartButton;
 
 	UPROPERTY(meta = (BindWidget))
+	class UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* ResultText;
 
 	UFUNCTION()
 	void OnRestartClicked();
+
+	UFUNCTION()
+	void OnQuitClicked();
 };

@@ -1,5 +1,6 @@
 #include "SushiPlayerController.h"
 #include "LobbyWidget.h"
+#include "PauseMenuWidget.h"
 #include "PlayerStatusWidget.h"
 #include "SushiGameState.h"
 #include "Blueprint/UserWidget.h"
@@ -28,6 +29,11 @@ ASushiPlayerController::ASushiPlayerController()
 	if (DefeatClass.Succeeded())
 	{
 		DefeatWidgetClass = DefeatClass.Class;
+	}
+	static ConstructorHelpers::FClassFinder<UPauseMenuWidget> PauseClass(TEXT("/Game/Assets/Blueprints/Widgets/WBP_PauseMenu"));
+	if (PauseClass.Succeeded())
+	{
+		PauseMenuClass = PauseClass.Class;
 	}
 }
 
@@ -144,3 +150,37 @@ void ASushiPlayerController::HideLobby()
 		LobbyWidgetInstance->RemoveFromParent();
 	}
 }
+
+void ASushiPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	InputComponent->BindAction("PauseMenu", IE_Pressed, this, &ASushiPlayerController::TogglePauseMenu);
+}
+
+void ASushiPlayerController::TogglePauseMenu()
+{
+	if (!PauseMenuInstance && PauseMenuClass)
+	{
+		PauseMenuInstance = CreateWidget<UPauseMenuWidget>(this, PauseMenuClass);
+		if (PauseMenuInstance)
+		{
+			PauseMenuInstance->AddToViewport(90);
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InputMode.SetHideCursorDuringCapture(false);
+			SetInputMode(InputMode);
+
+			bShowMouseCursor = true;
+		}
+	}
+	else if (PauseMenuInstance && PauseMenuInstance->IsInViewport())
+	{
+		PauseMenuInstance->RemoveFromParent();
+		PauseMenuInstance = nullptr;
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
+}
+

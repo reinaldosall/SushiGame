@@ -2,16 +2,15 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
-#include "SushiGameState.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/PlayerController.h"
-
+#include "SushiGameState.h"
 
 void ULobbyWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	Setup();
 }
-
 
 void ULobbyWidget::Setup()
 {
@@ -24,13 +23,15 @@ void ULobbyWidget::Setup()
 	{
 		JoinButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleJoinClicked);
 	}
+
+	if (QuitButton)
+	{
+		QuitButton->OnClicked.AddDynamic(this, &ULobbyWidget::HandleQuitClicked);
+	}
 }
 
 void ULobbyWidget::HandleHostClicked()
 {
-	// Starts the game as listen server
-	//UGameplayStatics::OpenLevel(GetWorld(), FName("Lvl_Restaurant"), true, "listen");
-	
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		UGameplayStatics::OpenLevel(PC, "Lvl_Restaurant", true, "listen");
@@ -39,30 +40,19 @@ void ULobbyWidget::HandleHostClicked()
 
 void ULobbyWidget::HandleJoinClicked()
 {
-	// Joins the local host (for testing  127.0.0.1)
-	//UGameplayStatics::OpenLevel(GetWorld(), FName("127.0.0.1"));
-	
 	if (APlayerController* PC = GetOwningPlayer())
 	{
 		PC->ClientTravel("127.0.0.1", TRAVEL_Absolute);
 	}
 }
 
-// void ULobbyWidget::HostGame()
-// {
-// 	if (APlayerController* PC = GetOwningPlayer())
-// 	{
-// 		PC->ConsoleCommand("open Lvl_Restaurant?listen");
-// 	}
-// }
-//
-// void ULobbyWidget::JoinGame()
-// {
-// 	if (APlayerController* PC = GetOwningPlayer())
-// 	{
-// 		PC->ConsoleCommand("open 127.0.0.1");
-// 	}
-// }
+void ULobbyWidget::HandleQuitClicked()
+{
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
+	}
+}
 
 void ULobbyWidget::OnMatchStateChanged(EMatchState NewState)
 {
