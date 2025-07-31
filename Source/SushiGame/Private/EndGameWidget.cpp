@@ -37,11 +37,11 @@ void UEndGameWidget::NativeConstruct()
 			switch (GS->GetMatchState())
 			{
 			case EMatchState::Victory:
-				StateStr = bIsHost ? "YOU WIN!" : "YOU WIN! WAITING FOR HOST TO RESTART...";
+				StateStr = bIsHost ? "YOU WIN!" : "YOU WIN!  Waiting for HOST to restart...";
 				break;
 
 			case EMatchState::Defeat:
-				StateStr = bIsHost ? "YOU LOSE!" : "YOU LOSE! WAITING FOR HOST TO RESTART...";
+				StateStr = bIsHost ? "YOU LOSE!" : "YOU LOSE!  Waiting for Host to restart...";
 				break;
 
 			default:
