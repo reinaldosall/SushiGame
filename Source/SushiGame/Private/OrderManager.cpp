@@ -12,8 +12,11 @@ AOrderManager::AOrderManager()
 	bReplicates = true;
 	bAlwaysRelevant = true;
 
+#if WITH_EDITORONLY_DATA
 	EditorIcon = CreateDefaultSubobject<UBillboardComponent>(TEXT("EditorIcon"));
 	RootComponent = EditorIcon;
+#endif
+	
 }
 
 void AOrderManager::BeginPlay()

@@ -11,14 +11,14 @@ ASushiGameMode::ASushiGameMode()
 	PlayerControllerClass = ASushiPlayerController::StaticClass();
 
 	// Set default pawn from Blueprint
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiGameCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Assets/Blueprints/Characters/BP_SushiPlayerCharacter_Clean"));
 	if (PlayerPawnBPClass.Class)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Could not find BP_SushiGameCharacter"));
+		UE_LOG(LogTemp, Error, TEXT("Could not find BP_SushiPlayerCharacter_Clean"));
 	}
 }
 

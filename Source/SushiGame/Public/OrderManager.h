@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/BillboardComponent.h"
 #include "OrderManager.generated.h"
 
 class ATableActor;
@@ -41,8 +42,10 @@ class SUSHIGAME_API AOrderManager : public AActor
 public:
 	AOrderManager();
 	
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(VisibleAnywhere)
 	UBillboardComponent* EditorIcon;
+#endif
 
 protected:
 	virtual void BeginPlay() override;
