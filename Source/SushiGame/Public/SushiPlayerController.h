@@ -17,6 +17,9 @@ public:
 	ASushiPlayerController();
 	virtual void BeginPlay() override;
 
+	// Override input setup
+	virtual void SetupInputComponent() override;
+
 	// Reacts to replicated match state
 	void HandleMatchState(EMatchState NewState);
 
@@ -33,6 +36,15 @@ public:
 
 	UPROPERTY()
 	ULobbyWidget* LobbyWidgetInstance;
+
+	UFUNCTION()
+	void TogglePauseMenu();
+
+	UPROPERTY()
+	class UPauseMenuWidget* PauseMenuInstance;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPauseMenuWidget> PauseMenuClass;
 
 	void ShowLobby();
 	void HideLobby();
