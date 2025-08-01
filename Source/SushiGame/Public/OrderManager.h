@@ -41,11 +41,6 @@ class SUSHIGAME_API AOrderManager : public AActor
 
 public:
 	AOrderManager();
-	
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(VisibleAnywhere)
-	UBillboardComponent* EditorIcon;
-#endif
 
 protected:
 	virtual void BeginPlay() override;
