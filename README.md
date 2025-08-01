@@ -1,5 +1,3 @@
-# SushiGame
-
 # 🍣 Sushi Game
 
 **Sushi Game** is a multiplayer cooking prototype developed in **Unreal Engine 5.6**, with all core systems implemented in **C++**. Players collaborate in a shared kitchen to prepare and deliver sushi dishes under time pressure.
