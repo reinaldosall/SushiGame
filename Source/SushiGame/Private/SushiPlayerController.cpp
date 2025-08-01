@@ -188,6 +188,6 @@ void ASushiPlayerController::Client_ShowPenaltyMessage_Implementation(const FStr
 {
 	if (PlayerStatusWidgetInstance)
 	{
-		PlayerStatusWidgetInstance->ShowTemporaryMessage(Message, 2.0f);
+		PlayerStatusWidgetInstance->ShowTemporaryMessage(Message, 3.0f);
 	}
 }
