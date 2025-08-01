@@ -1,6 +1,8 @@
 #include "OrderManager.h"
 #include "OrderHUDWidget.h"
+#include "PlayerStatusWidget.h"
 #include "SushiGameState.h"
+#include "SushiPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "TableActor.h"
 #include "Components/BillboardComponent.h"
@@ -35,41 +37,62 @@ void AOrderManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Prevents to generate orders when at lobby
+	// Do not run order logic if not in gameplay
 	ASushiGameState* GS = GetWorld() ? GetWorld()->GetGameState<ASushiGameState>() : nullptr;
 	if (!GS || GS->GetMatchState() != EMatchState::InGame) return;
 	
 	if (HasAuthority())
 	{
+		// Handle order generation timing
 		TimeSinceLastOrder += DeltaTime;
-
 		if (TimeSinceLastOrder >= OrderInterval)
 		{
 			GenerateOrder();
 			TimeSinceLastOrder = 0.0f;
 		}
 
+		// Handle active orders
 		for (FOrder& Order : ActiveOrders)
 		{
 			if (!Order.bCompleted)
 			{
 				Order.TimeRemaining -= DeltaTime;
 
-				if (Order.TimeRemaining <= 0.0f)
+				if (Order.TimeRemaining <= 0.0f && !Order.bAlreadyPenalized)
 				{
 					Order.bCompleted = true;
+					Order.bAlreadyPenalized = true;
+
+					// Clear order from table
 					if (Order.TargetTable)
 					{
 						Order.TargetTable->ClearFloatingOrderText();
 					}
-					UE_LOG(LogTemp, Warning, TEXT("Order expired: %s"), *Order.RecipeName.ToString());
+
+					// Apply global penalty for expired order
+					if (GS)
+					{
+						GS->AddGlobalScore(-20);
+						UE_LOG(LogTemp, Warning, TEXT("Order expired: %s (-20 points)"), *Order.RecipeName.ToString());
+					}
+
+					// Show feedback to local players
+					for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+					{
+						if (ASushiPlayerController* PC = Cast<ASushiPlayerController>(It->Get()))
+						{
+							PC->Client_ShowPenaltyMessage(TEXT("Order expired -20 pts"));
+						}
+					}
 				}
 			}
 		}
 	}
 
+	// Update local HUD
 	UpdateHUD();
 }
+
 
 void AOrderManager::UpdateHUD()
 {

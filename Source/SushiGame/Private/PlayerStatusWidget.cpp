@@ -1,6 +1,7 @@
 
 #include "PlayerStatusWidget.h"
 #include "Components/TextBlock.h"
+#include "TimerManager.h" 
 
 void UPlayerStatusWidget::UpdateDeliveryStatus(const FString& Text)
 {
@@ -34,4 +35,22 @@ void UPlayerStatusWidget::UpdateStatus(const FString& RecipeName, const FString&
 		*RecipeName, *StepDescription);
 	UE_LOG(LogTemp, Warning, TEXT("[HUD] UpdateStatus called — Recipe: %s, Step: %s"), *RecipeName, *StepDescription);
 
+}
+
+void UPlayerStatusWidget::ShowTemporaryMessage(const FString& Message, float Duration)
+{
+	if (FeedbackText)
+	{
+		FeedbackText->SetText(FText::FromString(Message));
+		FeedbackText->SetVisibility(ESlateVisibility::Visible);
+
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		{
+			if (FeedbackText)
+			{
+				FeedbackText->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}, Duration, false);
+	}
 }

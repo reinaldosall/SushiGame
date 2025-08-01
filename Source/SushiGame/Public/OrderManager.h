@@ -32,6 +32,9 @@ struct FOrder
 
 	UPROPERTY()
 	bool bCompleted;
+	
+	UPROPERTY()
+	bool bAlreadyPenalized = false;
 };
 
 UCLASS()
@@ -66,7 +69,7 @@ protected:
 
 	UPROPERTY()
 	UOrderHUDWidget* HUDWidgetInstance;
-
+	
 	UFUNCTION()
 	void OnRep_ActiveOrders();
 

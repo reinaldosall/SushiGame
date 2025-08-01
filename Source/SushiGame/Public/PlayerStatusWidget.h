@@ -20,9 +20,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateStatus(const FString& RecipeName, const FString& StepDescription);
+
+	UFUNCTION(BlueprintCallable)
+	void ShowTemporaryMessage(const FString& Message, float Duration = 2.0f);
 	
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DeliverStatusText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* FeedbackText;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreText;

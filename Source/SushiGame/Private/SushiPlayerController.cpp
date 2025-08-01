@@ -183,3 +183,11 @@ void ASushiPlayerController::TogglePauseMenu()
 		bShowMouseCursor = false;
 	}
 }
+
+void ASushiPlayerController::Client_ShowPenaltyMessage_Implementation(const FString& Message)
+{
+	if (PlayerStatusWidgetInstance)
+	{
+		PlayerStatusWidgetInstance->ShowTemporaryMessage(Message, 2.0f);
+	}
+}

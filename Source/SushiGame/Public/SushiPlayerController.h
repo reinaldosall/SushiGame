@@ -37,6 +37,9 @@ public:
 	UPROPERTY()
 	ULobbyWidget* LobbyWidgetInstance;
 
+	UFUNCTION(Client, Reliable)
+	void Client_ShowPenaltyMessage(const FString& Message);
+	
 	UFUNCTION()
 	void TogglePauseMenu();
 
